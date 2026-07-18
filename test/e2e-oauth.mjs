@@ -189,7 +189,11 @@ const badVerify = await fetch(BASE + '/verify?token=definitely-not-a-real-token'
 ok('/verify rejects a bad token', badVerify.status === 400);
 
 const resend = await post('/api/resend-verification', {}, { authorization: `Bearer ${SESSION}` });
-ok('resend on a verified account is a no-op (no email sent)', resend.body.sent === false && resend.body.alreadyVerified === true, JSON.stringify(resend.body));
+// No email must be sent. Two valid no-op reasons: the account is already verified
+// (email enabled), or email verification is disabled server-side (no RESEND key).
+ok('resend on a verified account is a no-op (no email sent)',
+  resend.body.sent === false && (resend.body.alreadyVerified === true || resend.body.reason === 'email_disabled'),
+  JSON.stringify(resend.body));
 
 if (DEMO_PASSWORD) {
   const dm = await post('/api/login', { email: DEMO_EMAIL, password: DEMO_PASSWORD });
