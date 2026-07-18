@@ -1,73 +1,40 @@
-// Unit tests for the pure functions in notes-jxa.mjs — no osascript, no Notes.
-// Run: node --test test-agent-unit.mjs
+// Unit tests for the pure functions in reminders-jxa.mjs — no osascript, no
+// Reminders app. Run: node --test test-agent-unit.mjs
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { escapeHtml, renderBodyHtml, buildJxaArgs, cleanOsascriptError, runTool } from './notes-jxa.mjs';
+import { buildJxaArgs, cleanOsascriptError, runTool } from './reminders-jxa.mjs';
 import { buildPlist, xmlEscape } from './cli.mjs';
 
-test('escapeHtml escapes all five entities', () => {
-  assert.equal(escapeHtml(`<b>"a" & 'b'</b>`), '&lt;b&gt;&quot;a&quot; &amp; &#39;b&#39;&lt;/b&gt;');
-  assert.equal(escapeHtml('plain'), 'plain');
-  assert.equal(escapeHtml(''), '');
-});
-
-test('renderBodyHtml wraps each line in a div', () => {
-  assert.equal(renderBodyHtml('one\ntwo'), '<div>one</div><div>two</div>');
-  assert.equal(renderBodyHtml('single'), '<div>single</div>');
-});
-
-test('renderBodyHtml keeps blank lines as <div><br></div>', () => {
-  assert.equal(renderBodyHtml('a\n\nb'), '<div>a</div><div><br></div><div>b</div>');
-  assert.equal(renderBodyHtml(''), '<div><br></div>');
-});
-
-test('renderBodyHtml handles CRLF and escapes content', () => {
-  assert.equal(renderBodyHtml('a\r\nb'), '<div>a</div><div>b</div>');
-  assert.equal(renderBodyHtml('<x> & "y"'), '<div>&lt;x&gt; &amp; &quot;y&quot;</div>');
-});
-
-test('buildJxaArgs createNote: escaped title div first, then rendered body', () => {
-  const out = buildJxaArgs('createNote', { title: 'T & Co', body: 'line<1>\nline2', folder: 'Work' });
-  assert.equal(out.html, '<div>T &amp; Co</div><div>line&lt;1&gt;</div><div>line2</div>');
-  assert.equal(out.folder, 'Work');
-});
-
-test('buildJxaArgs createNote: missing folder becomes null', () => {
-  const out = buildJxaArgs('createNote', { title: 't', body: 'b' });
-  assert.equal(out.folder, null);
-});
-
-test('buildJxaArgs appendToNote renders text to divs, keeps id', () => {
-  const out = buildJxaArgs('appendToNote', { id: 'x-coredata://ABC/ICNote/p1', text: 'a\nb' });
-  assert.deepEqual(out, { id: 'x-coredata://ABC/ICNote/p1', html: '<div>a</div><div>b</div>' });
-});
-
-test('buildJxaArgs updateNote: title div + rendered body + name', () => {
-  const out = buildJxaArgs('updateNote', { id: 'n1', title: 'New <T>', body: 'b1\nb2' });
-  assert.equal(out.id, 'n1');
-  assert.equal(out.title, 'New <T>');
-  assert.equal(out.html, '<div>New &lt;T&gt;</div><div>b1</div><div>b2</div>');
-});
-
-test('buildJxaArgs read tools pass args through untouched', () => {
+// Reminders have plain-text bodies (no HTML rendering like Notes), so buildJxaArgs
+// is an identity passthrough — the JXA programs receive args verbatim as JSON argv.
+test('buildJxaArgs passes read args through untouched', () => {
   const search = { query: 'q & <r>', limit: 5 };
-  assert.deepEqual(buildJxaArgs('searchNotes', search), search);
-  const get = { id: 'x-coredata://ABC' };
-  assert.deepEqual(buildJxaArgs('getNote', get), get);
-  assert.deepEqual(buildJxaArgs('listFolders', {}), {});
-  assert.deepEqual(buildJxaArgs('listNotes', { folder: 'Work' }), { folder: 'Work' });
+  assert.deepEqual(buildJxaArgs('search', search), search);
+  const get = { id: 'x-apple-reminderkit://REMCDReminder/ABC' };
+  assert.deepEqual(buildJxaArgs('get_reminder', get), get);
+  assert.deepEqual(buildJxaArgs('list_lists', {}), {});
+  assert.deepEqual(buildJxaArgs('list_reminders', { list: 'Work' }), { list: 'Work' });
+});
+
+test('buildJxaArgs passes write args through untouched', () => {
+  const create = { name: 'Buy milk', body: 'oat', due: '2026-07-20T09:00:00Z', list: 'Groceries' };
+  assert.deepEqual(buildJxaArgs('create_reminder', create), create);
+  const update = { id: 'r1', name: 'New name', due: null };
+  assert.deepEqual(buildJxaArgs('update_reminder', update), update);
+  const complete = { id: 'r1', completed: true };
+  assert.deepEqual(buildJxaArgs('complete_reminder', complete), complete);
 });
 
 test('built args survive the JSON round-trip used for the argv handoff', () => {
-  const out = buildJxaArgs('createNote', { title: `quote " tick ' back \\ slash`, body: 'x\ny' });
+  const out = buildJxaArgs('create_reminder', { name: `quote " tick ' back \\ slash`, body: 'x\ny' });
   assert.deepEqual(JSON.parse(JSON.stringify(out)), out);
 });
 
 test('cleanOsascriptError strips osascript noise', () => {
   assert.equal(
-    cleanOsascriptError('execution error: Error: Note not found: abc (-2700)'),
-    'Note not found: abc'
+    cleanOsascriptError('execution error: Error: Reminder not found: abc (-2700)'),
+    'Reminder not found: abc'
   );
   assert.equal(cleanOsascriptError('execution error: Application isn’t running. (-600)'), 'Application isn’t running.');
   assert.equal(cleanOsascriptError('plain failure'), 'plain failure');
@@ -86,14 +53,14 @@ test('xmlEscape escapes &, <, > for plist text nodes', () => {
 
 test('buildPlist emits the correct label, ProgramArguments and KeepAlive', () => {
   const xml = buildPlist({
-    label: 'com.notesbridge.apple-notes-agent',
+    label: 'com.remindersbridge.apple-reminders-agent',
     nodePath: '/usr/local/bin/node',
     cliPath: '/Users/me/agent/cli.mjs',
     workingDir: '/Users/me',
-    outLog: '/Users/me/Library/Logs/notesbridge-agent.log',
-    errLog: '/Users/me/Library/Logs/notesbridge-agent.err.log',
+    outLog: '/Users/me/Library/Logs/remindersbridge-agent.log',
+    errLog: '/Users/me/Library/Logs/remindersbridge-agent.err.log',
   });
-  assert.match(xml, /<key>Label<\/key>\s*<string>com\.notesbridge\.apple-notes-agent<\/string>/);
+  assert.match(xml, /<key>Label<\/key>\s*<string>com\.remindersbridge\.apple-reminders-agent<\/string>/);
   // ProgramArguments must be node, cli.mjs, run — in that order.
   assert.match(
     xml,
@@ -102,8 +69,8 @@ test('buildPlist emits the correct label, ProgramArguments and KeepAlive', () =>
   assert.match(xml, /<key>KeepAlive<\/key>\s*<true\/>/);
   assert.match(xml, /<key>RunAtLoad<\/key>\s*<true\/>/);
   assert.match(xml, /<key>WorkingDirectory<\/key>\s*<string>\/Users\/me<\/string>/);
-  assert.match(xml, /<key>StandardOutPath<\/key>\s*<string>\/Users\/me\/Library\/Logs\/notesbridge-agent\.log<\/string>/);
-  assert.match(xml, /<key>StandardErrorPath<\/key>\s*<string>\/Users\/me\/Library\/Logs\/notesbridge-agent\.err\.log<\/string>/);
+  assert.match(xml, /<key>StandardOutPath<\/key>\s*<string>\/Users\/me\/Library\/Logs\/remindersbridge-agent\.log<\/string>/);
+  assert.match(xml, /<key>StandardErrorPath<\/key>\s*<string>\/Users\/me\/Library\/Logs\/remindersbridge-agent\.err\.log<\/string>/);
 });
 
 test('buildPlist starts with the standard plist XML/DOCTYPE header', () => {

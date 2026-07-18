@@ -16,7 +16,7 @@ async function issueTokens(res, userId) {
     token_type: 'Bearer',
     expires_in: ACCESS_TTL,
     refresh_token: refreshToken,
-    scope: 'notes',
+    scope: 'reminders',
   });
 }
 

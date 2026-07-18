@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   const needsVerify = emailEnabled && !isDemo && isSendableEmail(normalized);
   await redis.set(key, JSON.stringify({ id, pw: hashPassword(password), email: normalized, verified: !needsVerify }));
   if (isDemo) {
-    await redis.set(`demo:${id}`, '1'); // reviewer demo account: MCP tools use sample notes
+    await redis.set(`demo:${id}`, '1'); // reviewer demo account: MCP tools use sample reminders
   }
   if (needsVerify) {
     const token = randomId('vrf', 24);

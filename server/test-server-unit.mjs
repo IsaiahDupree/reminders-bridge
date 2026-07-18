@@ -65,7 +65,7 @@ test('isSendableEmail accepts real addresses, rejects junk/test TLDs', () => {
   assert.equal(isSendableEmail('a@b.com'), true);
   assert.equal(isSendableEmail('user+tag@gmail.com'), true);
   assert.equal(isSendableEmail('x@y.test'), false);
-  assert.equal(isSendableEmail('r@notesbridge.demo'), false);
+  assert.equal(isSendableEmail('r@remindersbridge.demo'), false);
   assert.equal(isSendableEmail('nope'), false);
   assert.equal(isSendableEmail(''), false);
   assert.equal(isSendableEmail('a@localhost'), false);
@@ -119,16 +119,27 @@ test('waitForJob picks up a job enqueued mid-wait', async () => {
 });
 
 // ---- demo store: behaviour + cross-user isolation ----
-test('demoExec seeds and lists folders/notes for a user', async () => {
-  const f = await demoExec('demoA', 'listFolders', {});
-  assert.ok(f.folders.length >= 3);
-  const s = await demoExec('demoA', 'searchNotes', { query: 'sourdough' });
-  assert.equal(s.results[0].title, 'Sourdough recipe');
+test('demoExec seeds and lists lists/reminders for a user', async () => {
+  const f = await demoExec('demoA', 'list_lists', {});
+  assert.ok(f.lists.length >= 3);
+  const s = await demoExec('demoA', 'search', { query: 'oat milk' });
+  assert.equal(s.results[0].name, 'Buy oat milk');
+});
+test('demoExec list_reminders hides completed by default, shows them on request', async () => {
+  const open = await demoExec('demoA', 'list_reminders', {});
+  assert.ok(open.reminders.every((r) => r.completed === false));
+  const all = await demoExec('demoA', 'list_reminders', { include_completed: true });
+  assert.ok(all.reminders.some((r) => r.completed === true));
 });
 test('demoExec writes are isolated per user', async () => {
-  await demoExec('demoX', 'createNote', { title: 'X-secret', body: 'x' });
-  const y = await demoExec('demoY', 'searchNotes', { query: 'X-secret' });
-  assert.equal(y.results.length, 0); // user Y never sees user X's note
+  await demoExec('demoX', 'create_reminder', { name: 'X-secret', body: 'x' });
+  const y = await demoExec('demoY', 'search', { query: 'X-secret' });
+  assert.equal(y.results.length, 0); // user Y never sees user X's reminder
+});
+test('demoExec complete_reminder marks a reminder done', async () => {
+  const created = await demoExec('demoZ', 'create_reminder', { name: 'Finish taxes' });
+  const done = await demoExec('demoZ', 'complete_reminder', { id: created.reminder.id });
+  assert.equal(done.reminder.completed, true);
 });
 
 // ---- agent device registry + revocation ----

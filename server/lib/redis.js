@@ -1,7 +1,8 @@
 // redis.js — Redis-shaped storage on Supabase Postgres (shared ecosystem project),
 // with an in-memory fallback for local dev/tests. Only the small command surface
 // the app needs: get/set/del/lpush/rpop/expire. Queue semantics are FIFO
-// (lpush + rpop), implemented by nb_* RPC functions (see notesbridge_storage migration).
+// (lpush + rpop), implemented by the shared nb_* storage RPC functions (all
+// RemindersBridge keys are namespaced by prefix so they never collide).
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;

@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const user = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : null;
     const isDemo = await redis.get(`demo:${session.sub}`);
     if (user && user.verified === false && !isDemo) {
-      return res.status(403).json({ error: 'email_not_verified', error_description: 'Please verify your email first — check your inbox for a link from NotesBridge.' });
+      return res.status(403).json({ error: 'email_not_verified', error_description: 'Please verify your email first — check your inbox for a link from RemindersBridge.' });
     }
   }
 

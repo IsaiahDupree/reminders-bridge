@@ -1,6 +1,6 @@
 import { requireAgent } from '../../lib/agentauth.js';
 
-// Non-mutating agent reachability/pairing check for `apple-notes-agent status`.
+// Non-mutating agent reachability/pairing check for `apple-reminders-agent status`.
 // Unlike /api/agent/poll it does NOT markAgentOnline (which would make the relay
 // report the Mac online for ~75s with no run-loop serving jobs) and does NOT
 // popJob (which would steal/force-fail a real queued job). It validates the

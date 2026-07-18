@@ -1,7 +1,12 @@
--- NotesBridge storage schema.
+-- RemindersBridge storage schema (shared Mac Bridge storage layer).
 -- A Redis-shaped KV + FIFO-list surface on Supabase Postgres, exposed to the
 -- server through PostgREST RPC (called with the service-role key). RLS is on so
 -- the anon key can't reach the tables; only the service role (server) can.
+--
+-- The object names keep the historical `notesbridge_*` / `nb_*` prefix because
+-- the whole Mac Bridge family (NotesBridge, RemindersBridge, …) shares ONE set of
+-- these tables/functions — each app namespaces its own keys by prefix so they
+-- never collide. If you already applied this for another Mac Bridge app, skip it.
 --
 -- Apply once to your Supabase project (SQL editor or `supabase db push`), then
 -- set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY on the server.

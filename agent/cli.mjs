@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// apple-notes-agent — Mac-side half of NotesBridge.
-// Polls the relay server for jobs, runs them against Apple Notes via JXA,
+// apple-reminders-agent — Mac-side half of RemindersBridge.
+// Polls the relay server for jobs, runs them against Apple Reminders via JXA,
 // posts results back. Pair once, then `install` to keep it running on login.
 
 import {
@@ -17,11 +17,11 @@ const __dirname = dirname(__filename);
 // package.json is always shipped by npm, so it is a safe single source for the version.
 const VERSION = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf8')).version;
 
-const DEFAULT_SERVER = 'https://notesbridge.vercel.app';
-const CONFIG_PATH = join(homedir(), '.notesbridge-agent.json');
+const DEFAULT_SERVER = 'https://remindersbridge.vercel.app';
+const CONFIG_PATH = join(homedir(), '.remindersbridge-agent.json');
 // Written when `run` gets a 401 so a background (launchd) agent leaves a trail
 // explaining why it keeps exiting; cleared on the next healthy poll.
-const UNAUTHORIZED_MARKER = join(homedir(), '.notesbridge-agent.unauthorized');
+const UNAUTHORIZED_MARKER = join(homedir(), '.remindersbridge-agent.unauthorized');
 // Long-poll: ask the server to hold the connection open for up to this many
 // seconds and return the instant a job arrives (push-like). On return the agent
 // reconnects immediately, so jobs are picked up with sub-second latency.
@@ -39,10 +39,10 @@ const MAX_BACKOFF_MS = 30_000; // cap so a long outage doesn't hammer the server
 const STALE_JOB_MS = 50_000;
 
 // LaunchAgent identifiers (macOS auto-start).
-const LABEL = 'com.notesbridge.apple-notes-agent';
+const LABEL = 'com.remindersbridge.apple-reminders-agent';
 const PLIST_PATH = join(homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`);
-const LOG_PATH = join(homedir(), 'Library', 'Logs', 'notesbridge-agent.log');
-const ERR_LOG_PATH = join(homedir(), 'Library', 'Logs', 'notesbridge-agent.err.log');
+const LOG_PATH = join(homedir(), 'Library', 'Logs', 'remindersbridge-agent.log');
+const ERR_LOG_PATH = join(homedir(), 'Library', 'Logs', 'remindersbridge-agent.err.log');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const ts = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
@@ -144,7 +144,7 @@ function runLaunchctl(args) {
 
 async function cmdPair(code, server) {
   if (!code) {
-    console.error('Usage: apple-notes-agent pair <CODE> [--server URL]');
+    console.error('Usage: apple-reminders-agent pair <CODE> [--server URL]');
     process.exit(1);
   }
   let res;
@@ -165,8 +165,8 @@ async function cmdPair(code, server) {
   clearUnauthorizedMarker();
   console.log(`Paired with ${server}`);
   console.log(`Token saved to ${CONFIG_PATH} (mode 600)`);
-  console.log('Start the agent with:  apple-notes-agent run');
-  console.log('Keep it running on login with:  apple-notes-agent install');
+  console.log('Start the agent with:  apple-reminders-agent run');
+  console.log('Keep it running on login with:  apple-reminders-agent install');
 }
 
 function clearUnauthorizedMarker() {
@@ -183,15 +183,15 @@ async function handleRunUnauthorized(server) {
   logErr('UNAUTHORIZED (HTTP 401): the server rejected this agent token.');
   logErr('This Mac is no longer paired, so the background agent cannot work.');
   logErr('To fix it:');
-  logErr('  1. Open the NotesBridge site and generate a new pairing code.');
-  logErr('  2. Run: apple-notes-agent pair <CODE>');
-  logErr('  3. Run: apple-notes-agent install   (restarts the background agent)');
+  logErr('  1. Open the RemindersBridge site and generate a new pairing code.');
+  logErr('  2. Run: apple-reminders-agent pair <CODE>');
+  logErr('  3. Run: apple-reminders-agent install   (restarts the background agent)');
   logErr('==================================================================');
   try {
     writeFileSync(
       UNAUTHORIZED_MARKER,
       `${new Date().toISOString()} — 401 from ${server}\n` +
-        'This Mac is unpaired. Re-pair with: apple-notes-agent pair <CODE>\n',
+        'This Mac is unpaired. Re-pair with: apple-reminders-agent pair <CODE>\n',
     );
   } catch {}
   await sleep(5000); // short pause so launchd does not restart in a tight loop
@@ -223,14 +223,14 @@ async function cmdRun(serverFlag) {
   const config = loadConfig();
   if (!config?.token) {
     console.error(`Not paired — no token in ${CONFIG_PATH}.`);
-    console.error('Run: apple-notes-agent pair <CODE>');
+    console.error('Run: apple-reminders-agent pair <CODE>');
     process.exit(1);
   }
   const server = serverFlag || config.server || DEFAULT_SERVER;
   const token = config.token;
 
   installSignalHandlers();
-  log(`apple-notes-agent v${VERSION} starting — pid ${process.pid}, server ${server}, long-poll wait ${POLL_WAIT_SEC}s`);
+  log(`apple-reminders-agent v${VERSION} starting — pid ${process.pid}, server ${server}, long-poll wait ${POLL_WAIT_SEC}s`);
 
   let backoff = BACKOFF_MS;
   for (;;) {
@@ -291,7 +291,7 @@ async function cmdStatus(serverFlag) {
   const config = loadConfig();
   if (!config?.token) {
     console.log(`Not paired — no token in ${CONFIG_PATH}.`);
-    console.log('Run: apple-notes-agent pair <CODE>');
+    console.log('Run: apple-reminders-agent pair <CODE>');
     process.exit(1);
   }
   const server = serverFlag || config.server || DEFAULT_SERVER;
@@ -304,7 +304,7 @@ async function cmdStatus(serverFlag) {
     // serves) or steal an in-flight job from a running `run` loop.
     const res = await api(server, '/api/agent/ping', { token: config.token });
     if (res.status === 401) {
-      console.log('Paired:    NO — token rejected. Re-pair with: apple-notes-agent pair <CODE>');
+      console.log('Paired:    NO — token rejected. Re-pair with: apple-reminders-agent pair <CODE>');
       process.exit(1);
     }
     if (!res.ok) {
@@ -313,8 +313,8 @@ async function cmdStatus(serverFlag) {
     }
     console.log('Reachable: yes');
     console.log('Paired:    yes (token accepted)');
-    console.log(`Auto-start: ${existsSync(PLIST_PATH) ? `installed (${PLIST_PATH})` : 'not installed — run: apple-notes-agent install'}`);
-    console.log('Note:      this check does not mark the agent online or consume jobs — run `apple-notes-agent run` to serve requests.');
+    console.log(`Auto-start: ${existsSync(PLIST_PATH) ? `installed (${PLIST_PATH})` : 'not installed — run: apple-reminders-agent install'}`);
+    console.log('Note:      this check does not mark the agent online or consume jobs — run `apple-reminders-agent run` to serve requests.');
   } catch (e) {
     console.log(`Reachable: NO — ${e.message}`);
     process.exit(1);
@@ -324,15 +324,15 @@ async function cmdStatus(serverFlag) {
 async function cmdInstall() {
   if (process.platform !== 'darwin') {
     console.error('`install` is only supported on macOS (LaunchAgents are a macOS feature).');
-    console.error('On this platform, run the agent yourself with: apple-notes-agent run');
+    console.error('On this platform, run the agent yourself with: apple-reminders-agent run');
     process.exit(1);
   }
   const config = loadConfig();
   if (!config?.token) {
     console.error(`Not paired yet — no token in ${CONFIG_PATH}.`);
     console.error('Pair first, then install:');
-    console.error('  apple-notes-agent pair <CODE>');
-    console.error('  apple-notes-agent install');
+    console.error('  apple-reminders-agent pair <CODE>');
+    console.error('  apple-reminders-agent install');
     process.exit(1);
   }
 
@@ -370,7 +370,7 @@ async function cmdInstall() {
   // (Re)start it now (-k kills any running copy first).
   runLaunchctl(['kickstart', '-k', `gui/${uid}/${LABEL}`]);
 
-  console.log('Installed. apple-notes-agent now runs automatically:');
+  console.log('Installed. apple-reminders-agent now runs automatically:');
   console.log('  - starts on every login');
   console.log('  - restarts automatically if it crashes');
   console.log(`  - node:  ${nodePath}`);
@@ -379,11 +379,11 @@ async function cmdInstall() {
   console.log(`Logs:      ${LOG_PATH}`);
   console.log(`Error log: ${ERR_LOG_PATH}`);
   console.log('');
-  console.log('The first time it touches Apple Notes, macOS asks once to allow automation.');
+  console.log('The first time it touches Apple Reminders, macOS asks once to allow automation.');
   console.log('Approve it (or in System Settings > Privacy & Security > Automation).');
   console.log('');
-  console.log('View logs anytime with:  apple-notes-agent logs');
-  console.log('Stop & remove with:      apple-notes-agent uninstall');
+  console.log('View logs anytime with:  apple-reminders-agent logs');
+  console.log('Stop & remove with:      apple-reminders-agent uninstall');
 }
 
 async function cmdUninstall() {
@@ -414,7 +414,7 @@ function cmdLogs() {
     console.log(tail.join('\n'));
   } else {
     console.log(`No log file yet at ${LOG_PATH}.`);
-    console.log('Start the background agent with: apple-notes-agent install');
+    console.log('Start the background agent with: apple-reminders-agent install');
   }
   console.log('');
   console.log(`Errors are logged separately at: ${ERR_LOG_PATH}`);
@@ -425,13 +425,13 @@ function printVersion() {
 }
 
 function printHelp() {
-  console.log(`apple-notes-agent v${VERSION} — Mac-side relay for NotesBridge (Apple Notes in ChatGPT/Claude).
+  console.log(`apple-reminders-agent v${VERSION} — Mac-side relay for RemindersBridge (Apple Reminders in ChatGPT/Claude).
 
-Usage: apple-notes-agent <command> [--server URL]
+Usage: apple-reminders-agent <command> [--server URL]
 
 Commands:
-  pair <CODE>   Claim a pairing code from the NotesBridge site and save the agent token.
-  run           Long-poll the server for jobs and run them against Apple Notes (foreground).
+  pair <CODE>   Claim a pairing code from the RemindersBridge site and save the agent token.
+  run           Long-poll the server for jobs and run them against Apple Reminders (foreground).
   install       Install a macOS LaunchAgent so the agent starts on login and restarts on crash.
   uninstall     Stop and remove the LaunchAgent.
   logs          Show the last ~50 lines of the background agent log.
@@ -443,8 +443,8 @@ Options:
   -v, --version Show the version.
 
 Typical setup:
-  npx apple-notes-agent pair ABCD-1234
-  npx apple-notes-agent install`);
+  npx apple-reminders-agent pair ABCD-1234
+  npx apple-reminders-agent install`);
 }
 
 async function main() {

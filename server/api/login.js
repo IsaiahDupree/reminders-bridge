@@ -5,7 +5,7 @@ import { rateLimit } from '../lib/ratelimit.js';
 
 // A precomputed hash to run scrypt against for unknown users, so login timing
 // does not reveal whether an email is registered (constant-ish work either way).
-const DUMMY_HASH = hashPassword('notesbridge-timing-equalizer');
+const DUMMY_HASH = hashPassword('remindersbridge-timing-equalizer');
 const MAX_PW = 4096; // cap before scrypt so an oversized password can't DoS CPU/mem
 
 export default async function handler(req, res) {

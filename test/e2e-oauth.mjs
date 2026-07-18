@@ -1,4 +1,4 @@
-// e2e-oauth.mjs — full-stack integration test against the LIVE NotesBridge server.
+// e2e-oauth.mjs — full-stack integration test against the LIVE RemindersBridge server.
 // Exercises: signup/login, RFC 7591 DCR, PKCE authorize, token exchange,
 // authenticated MCP initialize + tools/list, and a relay-path probe.
 // Usage: node test/e2e-oauth.mjs   (reads ../.env.local for NB_* values)
@@ -15,7 +15,7 @@ const env = Object.fromEntries(
     .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)])
 );
 
-const BASE = env.NB_SERVER || 'https://notesbridge.vercel.app';
+const BASE = env.NB_SERVER || 'https://remindersbridge.vercel.app';
 const EMAIL = env.NB_EMAIL;
 const PASSWORD = env.NB_PASSWORD;
 
@@ -102,16 +102,16 @@ async function mcp(body) {
 }
 
 const init = await mcp({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'e2e', version: '1.0' } } });
-ok('MCP initialize', init.body.result?.serverInfo?.name === 'apple-notes-relay', JSON.stringify(init.body.result?.serverInfo));
+ok('MCP initialize', init.body.result?.serverInfo?.name === 'apple-reminders-relay', JSON.stringify(init.body.result?.serverInfo));
 
 const tools = await mcp({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
 const names = (tools.body.result?.tools || []).map((t) => t.name).sort();
-ok('MCP lists all 8 tools', JSON.stringify(names) === JSON.stringify(['append_to_note', 'create_note', 'fetch', 'get_note', 'list_folders', 'list_notes', 'search', 'update_note']), names.join(','));
+ok('MCP lists all 8 tools', JSON.stringify(names) === JSON.stringify(['complete_reminder', 'create_reminder', 'fetch', 'get_reminder', 'list_lists', 'list_reminders', 'search', 'update_reminder']), names.join(','));
 
 // 9. relay path: agent offline error proves the queue lookup ran end to end
-const call = await mcp({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'list_folders', arguments: {} } });
+const call = await mcp({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'list_lists', arguments: {} } });
 const text = call.body.result?.content?.[0]?.text || '';
-ok('relay probe (agent offline or online)', text.includes('agent is offline') || text.includes('folders'), text.slice(0, 80));
+ok('relay probe (agent offline or online)', text.includes('agent is offline') || text.includes('lists'), text.slice(0, 80));
 
 // ---------------------------------------------------------------- submission readiness
 
@@ -123,7 +123,7 @@ for (const p of ['/privacy', '/support']) {
 }
 
 // 11. reviewer demo mode: full flow with NO Mac agent involved
-const DEMO_EMAIL = 'reviewer@notesbridge.demo';
+const DEMO_EMAIL = 'reviewer@remindersbridge.demo';
 const DEMO_PASSWORD = env.DEMO_PASSWORD;
 if (DEMO_PASSWORD) {
   let ds = await post('/api/signup', { email: DEMO_EMAIL, password: DEMO_PASSWORD });
@@ -149,19 +149,19 @@ if (DEMO_PASSWORD) {
   };
   const toolText = (r) => r.result?.content?.[0]?.text || '';
 
-  const dFolders = await dmcp({ jsonrpc: '2.0', id: 10, method: 'tools/call', params: { name: 'list_folders', arguments: {} } });
-  ok('demo list_folders (no agent)', toolText(dFolders).includes('"folders"') && !toolText(dFolders).includes('offline'), toolText(dFolders).slice(0, 60));
+  const dLists = await dmcp({ jsonrpc: '2.0', id: 10, method: 'tools/call', params: { name: 'list_lists', arguments: {} } });
+  ok('demo list_lists (no agent)', toolText(dLists).includes('"lists"') && !toolText(dLists).includes('offline'), toolText(dLists).slice(0, 60));
 
-  const dSearch = await dmcp({ jsonrpc: '2.0', id: 11, method: 'tools/call', params: { name: 'search', arguments: { query: 'sourdough' } } });
-  ok('demo search finds sample note', toolText(dSearch).includes('Sourdough'));
+  const dSearch = await dmcp({ jsonrpc: '2.0', id: 11, method: 'tools/call', params: { name: 'search', arguments: { query: 'oat milk' } } });
+  ok('demo search finds sample reminder', toolText(dSearch).includes('oat milk'));
 
   const stamp = `e2e-${Date.now()}`;
-  const dCreate = await dmcp({ jsonrpc: '2.0', id: 12, method: 'tools/call', params: { name: 'create_note', arguments: { title: stamp, body: 'created by e2e' } } });
+  const dCreate = await dmcp({ jsonrpc: '2.0', id: 12, method: 'tools/call', params: { name: 'create_reminder', arguments: { name: stamp, body: 'created by e2e' } } });
   const createdId = (toolText(dCreate).match(/"id": "([^"]+)"/) || [])[1];
-  ok('demo create_note', !!createdId, toolText(dCreate).slice(0, 60));
+  ok('demo create_reminder', !!createdId, toolText(dCreate).slice(0, 60));
 
-  const dGet = await dmcp({ jsonrpc: '2.0', id: 13, method: 'tools/call', params: { name: 'get_note', arguments: { id: createdId } } });
-  ok('demo re-read of created note', toolText(dGet).includes(stamp) && toolText(dGet).includes('created by e2e'));
+  const dGet = await dmcp({ jsonrpc: '2.0', id: 13, method: 'tools/call', params: { name: 'get_reminder', arguments: { id: createdId } } });
+  ok('demo re-read of created reminder', toolText(dGet).includes(stamp) && toolText(dGet).includes('created by e2e'));
 } else {
   ok('demo account checks (DEMO_PASSWORD in .env.local)', false, 'DEMO_PASSWORD not set');
 }

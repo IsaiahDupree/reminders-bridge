@@ -27,7 +27,7 @@ export async function markAgentOnline(userId) {
 export async function enqueueJob(userId, tool, args) {
   if (!(await agentOnline(userId))) {
     throw new Error(
-      'Your Mac agent is offline. Start it on your Mac with: npx apple-notes-agent run (and make sure the Mac is awake).'
+      'Your Mac agent is offline. Start it on your Mac with: npx apple-reminders-agent run (and make sure the Mac is awake).'
     );
   }
   const jobId = randomId('job');

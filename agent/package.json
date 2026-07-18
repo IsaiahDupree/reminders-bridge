@@ -8,20 +8,20 @@
   },
   "files": [
     "cli.mjs",
-    "notes-jxa.mjs",
+    "reminders-jxa.mjs",
     "README.md",
     "LICENSE"
   ],
   "keywords": [
-    "apple-notes",
-    "notes",
+    "apple-reminders",
+    "reminders",
     "mcp",
     "chatgpt",
     "claude",
     "macos",
     "jxa",
     "osascript",
-    "notesbridge",
+    "remindersbridge",
     "automation",
     "agent",
     "launchagent"
@@ -29,7 +29,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/IsaiahDupree/notesbridge",
+    "url": "https://github.com/IsaiahDupree/reminders-bridge",
     "directory": "agent"
   },
   "engines": {
