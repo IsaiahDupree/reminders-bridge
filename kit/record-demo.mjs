@@ -41,7 +41,28 @@ async function getChatPage(browser) {
   await page.goto('https://chatgpt.com/', { waitUntil: 'domcontentloaded', timeout: 45000 }).catch(() => {});
   await page.waitForSelector('#prompt-textarea, form [contenteditable="true"]', { timeout: 30000 }).catch(() => {});
   await sleep(1500);
+  await collapseSidebar(page);
   return page;
+}
+
+// Collapse the left sidebar so the recording never shows the user's private
+// chat/project names. Best-effort across ChatGPT's selector variants.
+async function collapseSidebar(page) {
+  const closed = await page.evaluate(() => {
+    const sels = [
+      'button[data-testid="close-sidebar-button"]',
+      'button[aria-label="Close sidebar"]',
+      'button[aria-label="Close sidebar panel"]',
+      'button[aria-label*="lose sidebar"]',
+    ];
+    for (const s of sels) { const b = document.querySelector(s); if (b && b.offsetParent !== null) { b.click(); return s; } }
+    // Fallback: a toggle button near the top-left that controls the nav.
+    const t = [...document.querySelectorAll('button')].find((b) => /sidebar/i.test(b.getAttribute('aria-label') || '') && b.offsetParent !== null);
+    if (t) { t.click(); return 'aria-sidebar'; }
+    return null;
+  }).catch(() => null);
+  log(`sidebar collapse: ${closed || 'not found'}`);
+  await sleep(1500);
 }
 
 // Click a button/element whose visible text matches any of `texts` (best-effort).
