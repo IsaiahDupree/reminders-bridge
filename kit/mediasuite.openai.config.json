@@ -1,0 +1,52 @@
+{
+  "$comment": "MediaSuite listing for the OpenAI plugin directory (7-section form). Same schema as submission.config.json (NotesBridge). PENDING before submit: (1) a hosted demo VIDEO (info.demoRecordingUrl), (2) reviewer demo account creds + seeded data, (3) a Terms of Service page, (4) set OPENAI_APPS_CHALLENGE on the gateway when the form issues the token.",
+  "mcpUrl": "https://media-suite-gateway-production.up.railway.app/v1/mcp",
+  "authentication": "OAuth",
+  "info": {
+    "name": "MediaSuite",
+    "subtitle": "Your creator content studio",
+    "subtitleNote": "≤30 chars (OpenAI validates). This is 27.",
+    "description": "MediaSuite connects ChatGPT to your creator content workspace — your media library, AI-scored clips, scheduled posts, and cross-platform analytics. Ask what's performing and why, plan a week of short-form posts from one long video, draft and schedule posts across YouTube/Instagram/TikTok/Threads/Pinterest/Bluesky, tailor per-platform captions, generate a media kit or performance brief, search your transcripts by meaning, and trace which posts drove real revenue. Everything is grounded in your own data — the connector reads and writes only your content, authenticated per-user via OAuth 2.1 (PKCE + Dynamic Client Registration). Publishing goes direct to your connected platform accounts; no third-party reposting service.",
+    "category": "Productivity",
+    "developerIdentity": "Dupree Ops",
+    "developerIdentityNote": "Substring-matched against the verified identity (Dupree Ops LLC).",
+    "pluginAuthor": "Isaiah Dupree",
+    "websiteUrl": "https://mediasuite-site.vercel.app",
+    "supportUrl": "https://mediasuite-site.vercel.app/support.html",
+    "privacyUrl": "https://mediasuite-site.vercel.app/privacy.html",
+    "termsUrl": "https://mediasuite-site.vercel.app/terms.html",
+    "demoRecordingUrl": "https://youtu.be/_kcYdYdSvgs",
+    "directoryIcon": "../../../Documents/Software/media-suite/site/icon.png",
+    "composerIcon": "../../../Documents/Software/media-suite/site/icon.png",
+    "commerceLinksOutForPurchases": false
+  },
+  "domainVerification": {
+    "note": "The gateway serves /.well-known/openai-apps-challenge from the OPENAI_APPS_CHALLENGE env var (route is live, returns 404 until set). When the form issues the token: `RAILWAY_API_TOKEN=<acct> railway variables --service media-suite-gateway --set OPENAI_APPS_CHALLENGE=<token>` then redeploy, then click Verify Domain.",
+    "wellKnownPath": "/.well-known/openai-apps-challenge"
+  },
+  "reviewerDemo": {
+    "note": "MediaSuite's OAuth consent page authenticates with a HANDLE + mcp_ token (not email/password). Reviewers: add the connector, authorize, and on the consent page enter handle 'demo' + the token. The demo user reads an isolated seeded namespace; no real data is exposed. Verified end-to-end 2026-07-18. Re-seed with `npm run seed:demo`.",
+    "handle": "demo",
+    "tokenEnvVar": "MEDIASUITE_DEMO_TOKEN",
+    "tokenLocation": "media-suite/.env.local (gitignored) — paste at submission time"
+  },
+  "prompts": [
+    "What are my top-performing posts?",
+    "Plan a week of shorts from my latest long video",
+    "How have my views trended over the last month?"
+  ],
+  "testCases": [
+    { "scenario": "Top content", "prompt": "What are my top posts?", "tools": "top_content", "expected": "Returns the demo account's top posts by views (platform, views, likes, caption, permalink) — renders as the top-content cards once approved." },
+    { "scenario": "Overall analytics", "prompt": "How am I doing overall?", "tools": "get_analytics", "expected": "Topline (post count, total/avg views, avg engagement, date span) + per-format breakdown + caption topic clusters." },
+    { "scenario": "List media library", "prompt": "List my media library", "tools": "list_media", "expected": "The demo account's media assets (id, filename, contentType, bytes, ingestedAt)." },
+    { "scenario": "Connected accounts", "prompt": "Which platforms am I connected to?", "tools": "list_accounts", "expected": "Per-platform groups with publishReady + accounts (handle, followerCount, isPrimary)." },
+    { "scenario": "Capture an idea (write, confirmed)", "prompt": "Add a content idea: turn the podcast into three shorts", "tools": "add_idea", "expected": "ChatGPT confirms, then add_idea stores an open idea and returns it." }
+  ],
+  "testCasesNote": "Exactly 5 positive test cases; run against seeded demo data.",
+  "negativeTestCases": [
+    { "scenario": "A different scheduling/posting product — MediaSuite is not Buffer/Hootsuite/Later and should not trigger for them.", "prompt": "Add this to my Buffer queue." },
+    { "scenario": "A general task unrelated to the user's own media/social content — MediaSuite only works with the creator's own workspace.", "prompt": "Summarize this PDF contract for me." },
+    { "scenario": "Generic how-to advice, not an action on the user's own data — MediaSuite answers from the creator's own analytics, not general tips.", "prompt": "What are some tips to grow on YouTube?" }
+  ],
+  "releaseNotes": "Initial release. MediaSuite brings your creator content workspace into ChatGPT — media library, clips, scheduling across platforms, cross-platform analytics, media kits, transcript search, and revenue attribution. Grounded entirely in your own data, per-user OAuth 2.1. Read tools are read-only; write tools (draft, schedule, capture idea, export) are additive and confirmed by you."
+}

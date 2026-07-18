@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Authorize — NotesBridge</title>
+<style>
+  :root{
+    --bg:#0f1115; --bg2:#0b0d11; --card:#181b22; --card2:#1c2029;
+    --text:#e8eaf0; --muted:#9aa1af; --faint:#6b7280;
+    --accent:#f5b942; --accent-dim:#b98a2e; --accent-glow:rgba(245,185,66,.18);
+    --ok:#4ade80; --bad:#f87171;
+    --border:#2a2f3a; --border-lit:#3a4150;
+    --radius:16px; --radius-sm:10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); min-height:100vh; line-height:1.5;
+    display:flex; align-items:center; justify-content:center; padding:18px; position:relative; overflow-x:hidden;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:radial-gradient(900px 460px at 50% -10%, var(--accent-glow), transparent 60%);
+  }
+  .card{position:relative; z-index:1; background:linear-gradient(180deg,var(--card),var(--card2)); border:1px solid var(--border); border-radius:var(--radius); padding:26px; width:100%; max-width:440px; box-shadow:0 20px 60px -20px rgba(0,0,0,.7);}
+  .brand{display:flex; align-items:center; gap:9px; font-weight:700; font-size:15px; margin-bottom:18px;}
+  .brand svg{width:26px; height:26px; display:block;}
+  .brand b{color:var(--accent);}
+  h1{font-size:20px; line-height:1.25; margin-bottom:8px; letter-spacing:-.2px;}
+  .muted{color:var(--muted); font-size:14px; margin-bottom:14px;}
+  label{display:block; font-size:13px; color:var(--muted); margin:12px 0 6px; font-weight:500;}
+  input{width:100%; padding:11px 13px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:15px; transition:border-color .15s;}
+  input::placeholder{color:var(--faint);}
+  input:focus{outline:none; border-color:var(--accent-dim);}
+  button{font-family:inherit; cursor:pointer; margin-top:16px; width:100%; padding:12px; border-radius:var(--radius-sm); border:none; background:var(--accent); color:#14110a; font-weight:600; font-size:15px; transition:filter .15s, transform .05s;}
+  button:hover{filter:brightness(1.06);}
+  button:active{transform:translateY(1px);}
+  button.secondary{background:transparent; border:1px solid var(--border-lit); color:var(--text); margin-top:8px;}
+  button.secondary:hover{background:rgba(255,255,255,.03); border-color:var(--faint); filter:none;}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .err{color:var(--bad); font-size:13px; margin-top:12px; min-height:16px;}
+  .hidden{display:none;}
+
+  /* consent access list */
+  .perms{list-style:none; margin:6px 0 4px; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; background:var(--bg2);}
+  .perms li{display:flex; align-items:flex-start; gap:11px; padding:12px 14px; font-size:14px; color:var(--text);}
+  .perms li + li{border-top:1px solid var(--border);}
+  .perms .ic{flex:none; width:24px; height:24px; border-radius:7px; display:flex; align-items:center; justify-content:center; background:var(--accent-glow); color:var(--accent); margin-top:1px;}
+  .perms .ic svg{width:14px; height:14px;}
+  .perms b{display:block; font-size:14px; font-weight:600; margin-bottom:1px;}
+  .perms span{color:var(--muted); font-size:12.5px; line-height:1.45;}
+  .safenote{display:flex; gap:9px; align-items:flex-start; margin-top:14px; padding:11px 13px; border-radius:var(--radius-sm); background:rgba(74,222,128,.08); border:1px solid rgba(74,222,128,.25); font-size:12.5px; color:#bbf7d0; line-height:1.5;}
+  .safenote svg{flex:none; width:15px; height:15px; margin-top:1px;}
+  .who{font-size:12px; color:var(--faint); margin-top:14px; text-align:center;}
+  .who b{color:var(--muted);}
+  .sitefoot { text-align:center; margin-top:14px; color:var(--muted); font-size:12px; }
+  .sitefoot a { color:var(--muted); text-decoration:none; margin:0 8px; }
+  .sitefoot a:hover { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <rect x="1.5" y="1.5" width="29" height="29" rx="8" fill="#181b22" stroke="#2a2f3a"/>
+      <rect x="8" y="7" width="16" height="18" rx="3" fill="#0b0d11" stroke="#f5b942" stroke-width="1.6"/>
+      <path d="M11 12h10M11 16h10M11 20h6" stroke="#f5b942" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    <span>Notes<b>Bridge</b></span>
+  </div>
+
+  <h1>Connect ChatGPT to your Apple Notes</h1>
+
+  <div id="loginView">
+    <p class="muted">Sign in to your NotesBridge account to continue authorizing ChatGPT.</p>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
+    <button onclick="doAuth('login')">Sign in &amp; continue</button>
+    <button class="secondary" onclick="doAuth('signup')">Create account &amp; continue</button>
+  </div>
+
+  <div id="consentView" class="hidden">
+    <p class="muted">ChatGPT is requesting permission to work with your Apple Notes:</p>
+    <ul class="perms">
+      <li>
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
+        <span><b>Search &amp; read your notes</b>Find and pull content from your Apple Notes to answer your questions.</span>
+      </li>
+      <li>
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+        <span><b>Create &amp; edit notes</b>Add new notes and update existing ones when you ask.</span>
+      </li>
+    </ul>
+    <div class="safenote">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+      <span>Everything runs on <b>your own Mac</b> through your paired agent — your notes are never stored on our servers. Any note that creates or edits content is <b>confirmed by you inside ChatGPT</b> before it happens.</span>
+    </div>
+    <p class="muted" id="redirectHost" style="font-size:12px;margin-top:2px"></p>
+    <button onclick="approve()">Allow</button>
+    <button class="secondary" onclick="deny()">Cancel</button>
+  </div>
+
+  <div class="err" id="err" role="alert" aria-live="polite"></div>
+
+  <p class="who" id="whoLine"></p>
+
+  <p class="sitefoot"><a href="/privacy">Privacy</a>·<a href="/support">Support</a></p>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  let TOKEN = sessionStorage.getItem('nb_token') || null;
+  const $ = (id) => document.getElementById(id);
+  const api = (path, body) => fetch(path, {
+    method:'POST',
+    headers:{ 'content-type':'application/json', ...(TOKEN ? { authorization:'Bearer '+TOKEN } : {}) },
+    body: JSON.stringify(body)
+  }).then(async r => { const j = await r.json().catch(()=>({})); if (!r.ok) throw new Error(j.error || r.statusText); return j; });
+
+  function render(){
+    $('loginView').classList.toggle('hidden', !!TOKEN);
+    $('consentView').classList.toggle('hidden', !TOKEN);
+    $('whoLine').innerHTML = TOKEN ? 'Signed in. <b>Not you?</b> Refresh to switch accounts.' : '';
+    // Show where the authorization code will be sent, so a spoofed client can't
+    // pass itself off as first-party by name alone.
+    try {
+      var host = new URL(q.get('redirect_uri')).host;
+      $('redirectHost').textContent = 'After you allow, you’ll be returned to ' + host;
+    } catch (e) { $('redirectHost').textContent = ''; }
+  }
+
+  async function doAuth(mode) {
+    $('err').textContent='';
+    try {
+      const j = await api('/api/'+mode, { email:$('email').value, password:$('password').value });
+      TOKEN = j.token; sessionStorage.setItem('nb_token', TOKEN); render();
+    } catch(e){ $('err').textContent = e.message; }
+  }
+
+  async function approve() {
+    $('err').textContent='';
+    try {
+      const j = await api('/api/oauth/authorize', {
+        client_id: q.get('client_id'),
+        redirect_uri: q.get('redirect_uri'),
+        state: q.get('state'),
+        code_challenge: q.get('code_challenge'),
+        code_challenge_method: q.get('code_challenge_method') || 'S256',
+        scope: q.get('scope') || 'notes',
+      });
+      location.href = j.redirect;
+    } catch(e){ $('err').textContent = e.message; }
+  }
+
+  function deny() {
+    const r = q.get('redirect_uri');
+    if (r) { const u = new URL(r); u.searchParams.set('error','access_denied'); if (q.get('state')) u.searchParams.set('state', q.get('state')); location.href = u.toString(); }
+  }
+  render();
+</script>
+</body>
+</html>

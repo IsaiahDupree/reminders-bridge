@@ -1,0 +1,70 @@
+{
+  "$comment": "NotesBridge listing for the Anthropic (Claude) Connectors Directory 11-step portal (claude.ai/admin-settings/directory/submissions/new). Field limits per SUBMIT-FLOW-ANTHROPIC.md. Secrets are NOT stored here; the reviewer password is read from ../.env.local by env var name. Submitting requires a Team/Enterprise Claude org with Owner access.",
+  "connection": {
+    "serverUrl": "https://notesbridge.vercel.app/mcp",
+    "transport": "streamable-http",
+    "connectionModel": "single-url",
+    "connectionModelNote": "One MCP URL for all users; each user authenticates via OAuth to their own account."
+  },
+  "listing": {
+    "serverName": "NotesBridge",
+    "serverNameLimit": 100,
+    "tagline": "Search and edit your Apple Notes from Claude",
+    "taglineLimit": 55,
+    "description": "NotesBridge connects Claude to the notes on your Mac. Search and read any note, create new ones, append to lists, or rewrite drafts — all from a conversation. Your notes never live on our servers: every action is executed on your own Mac by a small open-source agent you install with one command (npx apple-notes-agent), and the relay only carries each request for the seconds it's in flight. Write actions are always confirmed by you before they happen. NotesBridge is open source (MIT) and self-hostable, uses OAuth 2.1 with PKCE and Dynamic Client Registration, and stores no note content — the cloud piece is a stateless relay between Claude and your Mac.",
+    "descriptionLimit": 2000,
+    "documentationUrl": "https://github.com/IsaiahDupree/notesbridge",
+    "privacyPolicyUrl": "https://notesbridge.vercel.app/privacy",
+    "supportContact": "https://notesbridge.vercel.app/support",
+    "icon": "assets/icon-512.png",
+    "urlSlug": "notesbridge",
+    "urlSlugNote": "PERMANENT once published.",
+    "categories": ["Productivity"]
+  },
+  "useCases": {
+    "primary": [
+      "Find and read a note by keyword or title without leaving the chat",
+      "Capture a new note or to-do from the conversation",
+      "Append items to an existing list (e.g. groceries, packing)",
+      "Rewrite or clean up a draft note (confirmed before overwrite)"
+    ],
+    "prerequisites": "A Mac with the free apple-notes-agent running (one npx command) and a NotesBridge account paired to it. Reviewers can use the demo account, which needs no Mac.",
+    "readWrite": "Read and write. Read tools: search, fetch, list_folders, list_notes, get_note. Write tools: create_note, append_to_note (non-destructive), update_note (destructive — confirmed first)."
+  },
+  "company": {
+    "name": "Dupree Ops",
+    "website": "https://notesbridge.vercel.app",
+    "primaryContactEnvVar": "OWNER_EMAIL",
+    "primaryContactNote": "Primary contact email for review updates; not stored here."
+  },
+  "authentication": {
+    "mode": "oauth",
+    "detail": "OAuth 2.1 + PKCE (S256) + RFC 7591 Dynamic Client Registration. Discovery at /.well-known/oauth-authorization-server and /.well-known/oauth-protected-resource. Scope: notes."
+  },
+  "dataHandling": {
+    "firstPartyApi": true,
+    "firstPartyApiNote": "We operate our own relay + the open-source Mac agent; no third-party API is proxied.",
+    "personalHealthData": false,
+    "sponsoredContent": false,
+    "conversationDataCollection": "none — the relay stores only short-lived job payloads (TTL seconds) and the account record; no note content or conversation data is retained."
+  },
+  "reviewerTest": {
+    "note": "Reviewers exercise every tool 24/7 with no Mac via the demo account (server-side sample notes). Password lives in ../.env.local, never here.",
+    "email": "reviewer@notesbridge.demo",
+    "passwordEnvVar": "DEMO_PASSWORD",
+    "instructions": "Add NotesBridge as a custom connector (or via the directory listing), authorize with the demo account above, then: 1) 'List my Apple Notes folders' → list_folders (Notes, Work, Recipes). 2) 'Search my notes for sourdough' → search → 'Sourdough recipe'. 3) 'What's on my grocery list?' → search + fetch → milk, eggs, coffee beans, blueberries. 4) 'Create a note titled Demo idea with the body Try NotesBridge' → create_note (confirms first). 5) 'List the notes in my Work folder' → list_notes → 'Q3 planning'. All 8 tools run against built-in sample notes; no Mac or pairing needed.",
+    "testedEveryTool": true
+  },
+  "compliance": {
+    "note": "Seven mandatory acknowledgments + Anthropic Software Directory Terms & Policy. These are the OWNER's legal attestations — the automation stops before them, same as the OpenAI policy checkboxes.",
+    "acknowledgments": [
+      "Directory guidelines",
+      "First-party API usage",
+      "Financial transactions (none — NotesBridge initiates no transfers)",
+      "AI media generation (none)",
+      "Prompt-injection safeguards",
+      "Conversation-data-collection restrictions (none collected)",
+      "Public documentation requirement (README + privacy live)"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Syntax check all JS/MJS
+        run: |
+          set -e
+          find server agent test -type f \( -name '*.js' -o -name '*.mjs' \) \
+            -not -path '*/node_modules/*' -print0 |
+            while IFS= read -r -d '' f; do echo "check $f"; node --check "$f"; done
+
+      - name: Install server deps
+        working-directory: server
+        run: npm ci || npm install
+
+      # Runs with no SUPABASE_* env, so the storage layer uses its in-memory
+      # fallback — no live database is touched.
+      - name: Server unit tests
+        working-directory: server
+        run: node --test test-server-unit.mjs
+
+      - name: Agent unit tests
+        working-directory: agent
+        run: node --test test-agent-unit.mjs

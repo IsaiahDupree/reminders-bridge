@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/.well-known/oauth-authorization-server", "destination": "/api/wellknown?type=as" },
+    { "source": "/.well-known/oauth-authorization-server/:path*", "destination": "/api/wellknown?type=as" },
+    { "source": "/.well-known/oauth-protected-resource", "destination": "/api/wellknown?type=pr" },
+    { "source": "/.well-known/oauth-protected-resource/:path*", "destination": "/api/wellknown?type=pr" },
+    { "source": "/oauth/authorize", "destination": "/authorize.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/support", "destination": "/support.html" },
+    { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/verify", "destination": "/api/verify" },
+    { "source": "/.well-known/security.txt", "destination": "/security.txt" },
+    { "source": "/.well-known/openai-apps-challenge", "destination": "/api/challenge" },
+    { "source": "/mcp", "destination": "/api/mcp" }
+  ],
+  "functions": {
+    "api/mcp.js": { "maxDuration": 60 },
+    "api/agent/poll.js": { "maxDuration": 30 }
+  }
+}

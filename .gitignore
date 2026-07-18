@@ -1,0 +1,24 @@
+# secrets — never commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# vercel
+.vercel
+
+# deps
+node_modules/
+
+# logs / runtime
+*.log
+logs/
+kit/screenshots/*.png
+!kit/screenshots/.gitkeep
+
+# os
+.DS_Store
+
+# agent runtime config (lives in the user's home, never in the repo)
+.notesbridge-agent.json

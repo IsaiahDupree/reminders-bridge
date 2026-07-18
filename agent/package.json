@@ -1,0 +1,41 @@
+{
+  "name": "apple-reminders-agent",
+  "version": "1.3.0",
+  "description": "Local agent for the Reminders Bridge MCP connector — lets ChatGPT work with your Apple Reminders via your own Mac.",
+  "type": "module",
+  "bin": {
+    "apple-reminders-agent": "./cli.mjs"
+  },
+  "files": [
+    "cli.mjs",
+    "notes-jxa.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "apple-notes",
+    "notes",
+    "mcp",
+    "chatgpt",
+    "claude",
+    "macos",
+    "jxa",
+    "osascript",
+    "notesbridge",
+    "automation",
+    "agent",
+    "launchagent"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IsaiahDupree/notesbridge",
+    "directory": "agent"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test-agent-unit.mjs"
+  }
+}

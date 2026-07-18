@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support — NotesBridge</title>
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --text:#e8eaf0; --muted:#9aa1af; --accent:#f5b942; --border:#2a2f3a; }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); display:flex; justify-content:center; padding:40px 16px; }
+  main { max-width:720px; width:100%; line-height:1.65; }
+  h1 { font-size:26px; margin-bottom:14px; } h1 span{color:var(--accent);}
+  h2 { font-size:17px; margin:24px 0 8px; }
+  p, li { color:var(--muted); font-size:15px; margin-bottom:10px; }
+  ul { padding-left:20px; }
+  b { color:var(--text); }
+  code { background:#0c0e12; border:1px solid var(--border); border-radius:6px; padding:2px 6px; font-size:13px; }
+  a { color:var(--accent); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:18px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Notes<span>Bridge</span> Support</h1>
+
+  <div class="card">
+    <p><b>Contact:</b> <a href="mailto:isaiahdupree33@gmail.com">isaiahdupree33@gmail.com</a> — we aim to respond within 2 business days.</p>
+  </div>
+
+  <h2>Common issues</h2>
+  <ul>
+    <li><b>"Your Mac agent is offline."</b> Start it on your Mac with <code>apple-notes-agent run</code> and make sure the Mac is awake (tip: <code>caffeinate -s</code> while plugged in).</li>
+    <li><b>macOS says it can't control Notes.</b> System Settings → Privacy &amp; Security → Automation → allow your terminal app to control Notes.</li>
+    <li><b>Notes from iPhone missing.</b> Confirm iCloud Notes sync is enabled on both the iPhone and the Mac (Settings → iCloud → Notes).</li>
+    <li><b>Connector shows unauthorized.</b> Remove and re-add the connector in your assistant to refresh the OAuth grant.</li>
+    <li><b>Locked notes don't appear.</b> Password-protected notes are excluded from automation by macOS — this is by design.</li>
+  </ul>
+
+  <h2>Uninstall / revoke access</h2>
+  <ul>
+    <li>Stop and unpair the Mac agent: quit the process and delete <code>~/.apple-notes-agent.json</code>.</li>
+    <li>Remove the connector in your assistant's settings.</li>
+    <li>Email us to delete your account and all associated data.</li>
+  </ul>
+
+  <p><a href="/">← Back to NotesBridge</a> · <a href="/privacy">Privacy Policy</a></p>
+</main>
+</body>
+</html>

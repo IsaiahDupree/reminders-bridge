@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — NotesBridge</title>
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --text:#e8eaf0; --muted:#9aa1af; --accent:#f5b942; --border:#2a2f3a; }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); display:flex; justify-content:center; padding:40px 16px; }
+  main { max-width:720px; width:100%; line-height:1.65; }
+  h1 { font-size:26px; margin-bottom:4px; } h1 span{color:var(--accent);}
+  h2 { font-size:17px; margin:26px 0 8px; }
+  p, li { color:var(--muted); font-size:15px; margin-bottom:10px; }
+  ul { padding-left:20px; }
+  b { color:var(--text); }
+  .updated { font-size:13px; color:var(--muted); margin-bottom:22px; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Notes<span>Bridge</span> Privacy Policy</h1>
+  <p class="updated">Last updated: July 15, 2026</p>
+
+  <p>NotesBridge lets you use your Apple Notes from AI assistants such as ChatGPT. It is built so that your notes live on <b>your own Mac</b> — the service relays requests, it does not host your notes.</p>
+
+  <h2>Data we collect and why</h2>
+  <ul>
+    <li><b>Account data:</b> your email address and a salted, hashed password (scrypt). Used solely to operate your account. We never store plaintext passwords.</li>
+    <li><b>Device pairing tokens:</b> a signed token identifying the Mac agent you paired. Used to route your requests to your own device.</li>
+    <li><b>Note content in transit:</b> when your assistant requests a note operation, the request and its result pass through our relay queue. This content is <b>transient</b>: it is held in encrypted storage (Supabase Postgres, in our own project) with a time-to-live of 45–60 seconds and is not logged, indexed, or retained. We do not maintain any copy of your notes. (Demo/reviewer accounts use fictional sample notes stored server-side instead.)</li>
+    <li><b>OAuth tokens:</b> standard access/refresh tokens so your assistant can act on your behalf. Refresh tokens rotate on every use.</li>
+  </ul>
+
+  <h2>What we do NOT do</h2>
+  <ul>
+    <li>No selling or sharing of personal data with third parties for their own purposes.</li>
+    <li>No advertising, tracking, surveillance, or behavioral profiling.</li>
+    <li>No storage of your notes at rest, and no access to password-locked notes (macOS excludes them from automation).</li>
+    <li>No collection of payment card data, health records, or government identifiers.</li>
+  </ul>
+
+  <h2>Data recipients (subprocessors)</h2>
+  <p>Infrastructure only: <b>Vercel</b> (application hosting), <b>Supabase</b> (transient job queue &amp; account records, Postgres), and <b>Resend</b> (sends the one-time email-address verification message — receives only your email address, never note content). Your assistant provider (e.g., OpenAI) processes the content you exchange with it under its own privacy policy.</p>
+
+  <h2>Retention</h2>
+  <p>Note content in transit: ≤ 90 seconds (automatic expiry). Account records and pairing tokens: until you delete your account. OAuth refresh tokens: 90 days or until revoked/rotated.</p>
+
+  <h2>Your rights &amp; deletion</h2>
+  <p>Email us to access or delete your account data at any time. Unpairing your Mac (deleting <code>~/.apple-notes-agent.json</code> and stopping the agent) immediately severs all access to your notes, regardless of any tokens outstanding.</p>
+
+  <h2>Security</h2>
+  <p>All traffic is TLS-encrypted. Authentication uses HMAC-signed tokens with PKCE-protected OAuth flows. Write actions require explicit confirmation in your assistant before they execute.</p>
+
+  <h2>Contact</h2>
+  <p>Questions or requests: <a href="mailto:isaiahdupree33@gmail.com">isaiahdupree33@gmail.com</a> · <a href="/support">Support</a></p>
+</main>
+</body>
+</html>

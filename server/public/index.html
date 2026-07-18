@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NotesBridge — Use your Apple Notes in ChatGPT</title>
+<style>
+  :root{
+    --bg:#0f1115; --bg2:#0b0d11; --card:#181b22; --card2:#1c2029;
+    --text:#e8eaf0; --muted:#9aa1af; --faint:#6b7280;
+    --accent:#f5b942; --accent-dim:#b98a2e; --accent-glow:rgba(245,185,66,.18);
+    --ok:#4ade80; --ok-dim:rgba(74,222,128,.14);
+    --bad:#f87171; --bad-dim:rgba(248,113,113,.14);
+    --border:#2a2f3a; --border-lit:#3a4150;
+    --radius:16px; --radius-sm:10px;
+    --shadow:0 10px 40px -12px rgba(0,0,0,.6);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); min-height:100vh;
+    line-height:1.5; overflow-x:hidden; position:relative;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(1100px 520px at 80% -10%, var(--accent-glow), transparent 60%),
+      radial-gradient(800px 420px at 0% 0%, rgba(74,222,128,.06), transparent 55%);
+  }
+  .wrap{position:relative; z-index:1; width:100%; max-width:760px; margin:0 auto; padding:20px 18px 60px;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 2px 22px; flex-wrap:wrap;}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; letter-spacing:-.2px;}
+  .brand svg{display:block; width:30px; height:30px; flex:none;}
+  .brand b{color:var(--accent); font-weight:700;}
+  .account{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted); flex-wrap:wrap;}
+  .account .who{max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .live{display:inline-flex; align-items:center; gap:7px; padding:5px 10px; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,.02);}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--faint); box-shadow:0 0 0 0 rgba(0,0,0,0); transition:background .2s;}
+  .dot.on{background:var(--ok); box-shadow:0 0 0 4px var(--ok-dim);}
+  .dot.off{background:var(--bad); box-shadow:0 0 0 4px var(--bad-dim);}
+
+  /* ---------- Buttons ---------- */
+  button{font-family:inherit; cursor:pointer; border:none; border-radius:var(--radius-sm); font-size:15px; font-weight:600;}
+  .btn{padding:11px 18px; background:var(--accent); color:#14110a; transition:filter .15s, transform .05s;}
+  .btn:hover{filter:brightness(1.06);}
+  .btn:active{transform:translateY(1px);}
+  .btn.secondary{background:transparent; border:1px solid var(--border-lit); color:var(--text);}
+  .btn.secondary:hover{border-color:var(--faint); background:rgba(255,255,255,.03);}
+  .btn.small{padding:7px 13px; font-size:13px;}
+  .btn.ghost{background:transparent; color:var(--muted); border:1px solid var(--border); padding:7px 12px; font-size:13px;}
+  .btn.ghost:hover{color:var(--text); border-color:var(--border-lit);}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px;}
+
+  /* ---------- Hero ---------- */
+  .hero{text-align:center; padding:14px 4px 26px;}
+  .hero h1{font-size:34px; line-height:1.12; letter-spacing:-.5px; margin-bottom:12px;}
+  .hero h1 b{color:var(--accent);}
+  .hero p.lead{color:var(--muted); font-size:16px; max-width:520px; margin:0 auto 22px;}
+  .flow{display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:6px;}
+  .flow .node{display:inline-flex; align-items:center; gap:7px; padding:8px 13px; border:1px solid var(--border); border-radius:999px; background:var(--card); font-size:13px; font-weight:600; color:var(--text);}
+  .flow .node .d{width:7px; height:7px; border-radius:50%; background:var(--accent);}
+  .flow .arrow{color:var(--faint); font-size:15px;}
+
+  /* ---------- Cards ---------- */
+  .card{background:linear-gradient(180deg,var(--card),var(--card2)); border:1px solid var(--border); border-radius:var(--radius); padding:22px; margin-bottom:16px; box-shadow:var(--shadow);}
+  .card h2{font-size:16px; margin-bottom:6px; letter-spacing:-.2px;}
+  .card .desc{color:var(--muted); font-size:14px; margin-bottom:14px;}
+
+  /* ---------- Auth ---------- */
+  .auth{max-width:440px; margin:0 auto;}
+  .tabs{display:flex; gap:4px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:4px; margin-bottom:16px;}
+  .tabs button{flex:1; padding:9px; border-radius:7px; background:transparent; color:var(--muted); font-size:14px;}
+  .tabs button.active{background:var(--card); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.35);}
+  label{display:block; font-size:13px; color:var(--muted); margin:12px 0 6px; font-weight:500;}
+  input{width:100%; padding:11px 13px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:15px; transition:border-color .15s;}
+  input::placeholder{color:var(--faint);}
+  input:focus{outline:none; border-color:var(--accent-dim);}
+  .auth .btn{width:100%; margin-top:18px;}
+  .hint{color:var(--faint); font-size:12px; margin-top:12px; text-align:center;}
+  .err{color:var(--bad); font-size:13px; margin-top:12px; min-height:16px;}
+
+  /* ---------- Server warning banner ---------- */
+  .banner{display:flex; gap:10px; align-items:flex-start; background:var(--bad-dim); border:1px solid rgba(248,113,113,.35); color:#fecaca; border-radius:var(--radius-sm); padding:12px 14px; font-size:13px; margin-bottom:16px;}
+  .banner b{color:#fff;}
+
+  /* ---------- Stepper ---------- */
+  .progress{margin:4px 0 20px;}
+  .track{height:6px; border-radius:999px; background:var(--bg2); border:1px solid var(--border); overflow:hidden;}
+  .fill{height:100%; width:0%; background:linear-gradient(90deg,var(--accent-dim),var(--accent)); border-radius:999px; transition:width .5s cubic-bezier(.4,0,.2,1);}
+  .steps{display:flex; gap:6px; margin-top:14px;}
+  .steps li{flex:1; list-style:none; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;}
+  .steps .badge{width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:var(--bg2); border:1px solid var(--border); color:var(--muted); transition:all .25s;}
+  .steps li.active .badge{background:var(--accent); color:#14110a; border-color:var(--accent); box-shadow:0 0 0 5px var(--accent-glow);}
+  .steps li.done .badge{background:var(--ok-dim); color:var(--ok); border-color:rgba(74,222,128,.5);}
+  .steps .lbl{font-size:11px; color:var(--faint); font-weight:600; letter-spacing:.1px;}
+  .steps li.active .lbl{color:var(--text);}
+  .steps li.done .lbl{color:var(--ok);}
+
+  /* ---------- Step cards ---------- */
+  .step{position:relative; opacity:.62; transition:opacity .25s, border-color .25s;}
+  .step.active{opacity:1; border-color:var(--accent-dim);}
+  .step.done{opacity:1;}
+  .step .head{display:flex; align-items:center; gap:12px; margin-bottom:4px;}
+  .step .snum{flex:none; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:var(--bg2); border:1px solid var(--border); color:var(--muted);}
+  .step.active .snum{background:var(--accent); color:#14110a; border-color:var(--accent);}
+  .step.done .snum{background:var(--ok-dim); color:var(--ok); border-color:rgba(74,222,128,.5);}
+  .step .head h2{margin:0;}
+  .step .body{padding-left:40px;}
+  @media (max-width:520px){ .step .body{padding-left:0;} }
+
+  /* ---------- Command blocks ---------- */
+  .cmd{display:flex; align-items:stretch; gap:8px; margin:10px 0;}
+  .cmd .code{flex:1; min-width:0; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:11px 14px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13.5px; color:#cbd5e6; overflow-x:auto; white-space:nowrap; display:flex; align-items:center;}
+  .cmd .code .accent{color:var(--accent);}
+  .copy{flex:none; align-self:stretch; padding:0 14px; background:var(--card); border:1px solid var(--border-lit); border-radius:var(--radius-sm); color:var(--text); font-size:13px; font-weight:600; min-width:74px; transition:all .15s;}
+  .copy:hover{border-color:var(--faint);}
+  .copy.copied{background:var(--ok-dim); color:var(--ok); border-color:rgba(74,222,128,.5);}
+  .note{color:var(--faint); font-size:12.5px; margin:2px 0 4px; line-height:1.5;}
+  .note code{background:var(--bg2); border:1px solid var(--border); border-radius:5px; padding:1px 5px; font-family:ui-monospace,Menlo,monospace; font-size:12px; color:var(--muted);}
+
+  /* ---------- Pairing ---------- */
+  .bigcode{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:34px; letter-spacing:8px; font-weight:700; text-align:center; color:var(--accent); background:var(--bg2); border:1px dashed var(--accent-dim); border-radius:var(--radius-sm); padding:18px; margin:12px 0 8px; user-select:all;}
+  .pill{display:inline-flex; align-items:center; gap:9px; padding:8px 15px; border-radius:999px; font-size:13.5px; font-weight:600; border:1px solid; margin-top:6px;}
+  .pill.wait{background:var(--bad-dim); border-color:rgba(248,113,113,.4); color:#fecaca;}
+  .pill.ok{background:var(--ok-dim); border-color:rgba(74,222,128,.5); color:#bbf7d0;}
+  .pill .spin{width:11px; height:11px; border-radius:50%; border:2px solid rgba(248,113,113,.35); border-top-color:var(--bad); animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- Numbered how-to ---------- */
+  ol.howto{list-style:none; counter-reset:h; margin:2px 0;}
+  ol.howto li{counter-increment:h; position:relative; padding-left:30px; margin-bottom:11px; color:var(--muted); font-size:14px; line-height:1.55;}
+  ol.howto li::before{content:counter(h); position:absolute; left:0; top:0; width:21px; height:21px; border-radius:50%; background:var(--bg2); border:1px solid var(--border); color:var(--accent); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+  ol.howto li b{color:var(--text); font-weight:600;}
+
+  /* ---------- Example prompts ---------- */
+  .prompt{display:flex; align-items:center; gap:8px; margin:8px 0;}
+  .prompt .code{flex:1; min-width:0; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; font-size:14px; color:#cbd5e6; overflow-x:auto; white-space:nowrap;}
+  .prompt .code em{color:var(--faint); font-style:italic;}
+
+  .devlist{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
+  .devlist li{display:flex; align-items:center; gap:12px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px 12px;}
+  .devlist .dinfo{flex:1; min-width:0;}
+  .devlist .dname{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .devlist .dmeta{color:var(--muted); font-size:12px;}
+  .devlist .remove{background:none; border:1px solid var(--border); color:var(--bad); border-radius:8px; padding:5px 10px; font-size:12px; font-weight:600; cursor:pointer;}
+  .devlist .remove:hover{border-color:var(--bad);}
+  .footlinks{display:flex; justify-content:center; gap:16px; margin-top:24px; font-size:13px;}
+  .footlinks button{background:none; color:var(--muted); border:none; font-weight:500; font-size:13px;}
+  .footlinks button:hover{color:var(--text); text-decoration:underline;}
+
+  .hidden{display:none !important;}
+  .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+  .sitefoot { text-align:center; padding:28px 16px 20px; color:var(--muted); font-size:13px; }
+  .sitefoot a { color:var(--muted); text-decoration:none; margin:0 10px; }
+  .sitefoot a:hover { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== Top bar ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect x="1.5" y="1.5" width="29" height="29" rx="8" fill="#181b22" stroke="#2a2f3a"/>
+        <rect x="8" y="7" width="16" height="18" rx="3" fill="#0b0d11" stroke="#f5b942" stroke-width="1.6"/>
+        <path d="M11 12h10M11 16h10M11 20h6" stroke="#f5b942" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span>Notes<b>Bridge</b></span>
+    </div>
+    <div class="account hidden" id="account">
+      <span class="live" title="Live agent status">
+        <span class="dot" id="topDot"></span><span id="topStatus">Checking…</span>
+      </span>
+      <span class="who" id="userEmail"></span>
+      <button class="btn ghost" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <!-- ===== Hero (signed-out) ===== -->
+  <section class="hero" id="hero">
+    <h1>Use your Apple Notes<br>in <b>ChatGPT</b></h1>
+    <p class="lead">Search, read, and write your Apple Notes from any ChatGPT chat — powered securely by your own Mac.</p>
+    <div class="flow" aria-hidden="true">
+      <span class="node"><span class="d"></span>ChatGPT</span>
+      <span class="arrow">&#8596;</span>
+      <span class="node"><span class="d"></span>NotesBridge relay</span>
+      <span class="arrow">&#8596;</span>
+      <span class="node"><span class="d"></span>Your Mac</span>
+    </div>
+  </section>
+
+  <!-- ===== Auth (signed-out) ===== -->
+  <section class="card auth" id="authCard">
+    <div class="tabs" role="tablist" aria-label="Sign in or create account">
+      <button id="tabLogin" class="active" role="tab" aria-selected="true" onclick="setMode('login')">Sign in</button>
+      <button id="tabSignup" role="tab" aria-selected="false" onclick="setMode('signup')">Create account</button>
+    </div>
+    <form id="authForm" onsubmit="return submitAuth(event)">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      <label for="password">Password <span id="pwHint">(8+ characters)</span></label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" required minlength="8">
+      <button class="btn" type="submit" id="authSubmit">Sign in</button>
+    </form>
+    <p class="hint" id="authSwitchHint">New here? <button type="button" onclick="setMode('signup')" style="background:none;border:none;color:var(--accent);font-weight:600;font-size:12px;cursor:pointer;padding:0;">Create an account</button></p>
+    <div class="err" id="authErr" role="alert" aria-live="polite"></div>
+  </section>
+
+  <!-- ===== Dashboard / wizard (signed-in) ===== -->
+  <section id="dash" class="hidden">
+
+    <div class="banner hidden" id="redisWarn" role="status">
+      <span aria-hidden="true">&#9888;</span>
+      <span><b>Server storage isn't fully configured yet.</b> Pairing and connections may not persist. If you host NotesBridge yourself, set up Redis (see the project setup docs).</span>
+    </div>
+
+    <div class="banner hidden" id="verifyBanner" role="status">
+      <span aria-hidden="true">&#9993;</span>
+      <span><b>Verify your email.</b> We sent a link to <span id="verifyEmail"></span>. Didn't get it?
+        <button type="button" id="resendVerify" onclick="resendVerification()" style="background:none;border:none;color:var(--accent);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;">Resend</button>
+        <span id="resendMsg" style="color:var(--muted);"></span>
+      </span>
+    </div>
+
+    <div class="progress">
+      <div class="track"><div class="fill" id="progFill"></div></div>
+      <ol class="steps" id="steps">
+        <li id="ind1"><span class="badge" id="badge1">1</span><span class="lbl">Install</span></li>
+        <li id="ind2"><span class="badge" id="badge2">2</span><span class="lbl">Pair Mac</span></li>
+        <li id="ind3"><span class="badge" id="badge3">3</span><span class="lbl">ChatGPT</span></li>
+        <li id="ind4"><span class="badge" id="badge4">4</span><span class="lbl">Try it</span></li>
+      </ol>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="card step" id="step1">
+      <div class="head"><span class="snum" id="snum1">1</span><h2>Install the Mac agent</h2></div>
+      <div class="body">
+        <p class="desc">A tiny helper runs on your Mac and answers your ChatGPT requests. Your notes stay on your machine — only the specific results you ask for are relayed.</p>
+        <p class="note">1. Pair your Mac to this account (get your code in Step 2, then run):</p>
+        <div class="cmd">
+          <div class="code" id="cmdPair">npx apple-notes-agent pair <span class="accent">&lt;CODE&gt;</span></div>
+          <button class="copy" data-target="cmdPair" onclick="copyEl(this)" aria-label="Copy pair command">Copy</button>
+        </div>
+        <p class="note">2. Keep it running automatically after every restart:</p>
+        <div class="cmd">
+          <div class="code" id="cmdInstall">npx apple-notes-agent install</div>
+          <button class="copy" data-target="cmdInstall" onclick="copyEl(this)" aria-label="Copy install command">Copy</button>
+        </div>
+        <p class="note">Requires <code>Node.js</code>. On first run macOS will ask permission for the agent to control Apple Notes — click Allow.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="card step" id="step2">
+      <div class="head"><span class="snum" id="snum2">2</span><h2>Pair your Mac</h2></div>
+      <div class="body">
+        <p class="desc">Generate a one-time code, then run the pair command from Step 1 on your Mac.</p>
+        <button class="btn" id="genBtn" onclick="makeCode()">Generate pairing code</button>
+        <div class="hidden" id="pairBox">
+          <div class="bigcode" id="pairCode" aria-label="Your pairing code"></div>
+          <p class="note" id="pairHint">This code expires in <b>10 minutes</b>. It's already filled into the pair command in Step 1 — copy it and run it on your Mac.</p>
+        </div>
+        <div style="margin-top:12px">
+          <span class="pill wait" id="agentPill" aria-live="polite">
+            <span class="spin" id="pillSpin"></span><span id="agentText">Waiting for your Mac…</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="card step" id="step3">
+      <div class="head"><span class="snum" id="snum3">3</span><h2>Connect ChatGPT</h2></div>
+      <div class="body">
+        <p class="desc">Add NotesBridge as a custom connector in ChatGPT (one time).</p>
+        <ol class="howto">
+          <li>In ChatGPT, open <b>Settings &#8594; Plugins</b> (formerly <b>Connectors</b>).</li>
+          <li>Under <b>Security &amp; login</b>, enable <b>Developer mode</b>.</li>
+          <li>Choose <b>Create a custom plugin</b> (custom connector).</li>
+          <li>Paste this <b>MCP Server URL</b>:</li>
+        </ol>
+        <div class="cmd">
+          <div class="code" id="mcpUrl">https://notesbridge.vercel.app/mcp</div>
+          <button class="copy" data-target="mcpUrl" onclick="copyEl(this)" aria-label="Copy MCP server URL">Copy</button>
+        </div>
+        <ol class="howto" start="5" style="counter-reset:h 4">
+          <li>Set <b>Authentication</b> to <b>OAuth</b>.</li>
+          <li>ChatGPT sends you here to <b>Sign in</b> and click <b>Allow</b> — then you're connected.</li>
+        </ol>
+        <button class="btn secondary small" style="margin-top:12px" onclick="finishStep3()">I've connected ChatGPT</button>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="card step" id="step4">
+      <div class="head"><span class="snum" id="snum4">4</span><h2>Try it in ChatGPT</h2></div>
+      <div class="body">
+        <p class="desc">Start a new chat, enable the NotesBridge connector, and ask:</p>
+        <div class="prompt">
+          <div class="code">Search my Apple Notes for <em>quarterly goals</em></div>
+          <button class="copy" data-copy="Search my Apple Notes for quarterly goals" onclick="copyText(this)" aria-label="Copy example prompt">Copy</button>
+        </div>
+        <div class="prompt">
+          <div class="code">Create a note titled <em>Meeting notes</em> with today's action items</div>
+          <button class="copy" data-copy="Create a note titled Meeting notes with today's action items" onclick="copyText(this)" aria-label="Copy example prompt">Copy</button>
+        </div>
+        <p class="note" style="margin-top:12px">Your Mac must be awake with the agent running for requests to work. Write actions are always confirmed inside ChatGPT before they run.</p>
+      </div>
+    </div>
+
+    <div class="card" id="devicesCard" style="display:none">
+      <div class="head"><h2>Paired Macs</h2></div>
+      <div class="body">
+        <p class="desc">Macs currently linked to your account. Remove any you don't recognize — that Mac's agent will stop working immediately.</p>
+        <ul id="deviceList" class="devlist"></ul>
+        <button class="btn ghost" id="unpairAll" onclick="revokeDeviceAction(null, true)" style="margin-top:10px">Unpair all Macs</button>
+      </div>
+    </div>
+
+    <div class="footlinks">
+      <button onclick="scrollToTop()">Back to top</button>
+      <button onclick="logout()">Sign out</button>
+    </div>
+  </section>
+
+  <footer class="sitefoot">
+    <a href="/privacy">Privacy</a>·<a href="/support">Support</a>·<a href="https://github.com/IsaiahDupree/notesbridge" rel="noopener">GitHub</a>
+  </footer>
+
+</div>
+
+<script>
+  /* ---------- state ---------- */
+  let TOKEN = sessionStorage.getItem('nb_token') || null;
+  let EMAIL = sessionStorage.getItem('nb_email') || '';
+  let mode = 'login';
+  let online = false, everOnline = false, redisOk = true;
+  let pairCodeVal = null;
+  let done = {1:false, 2:false, 3:false};
+  let pollTimer = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  async function api(path, opts={}) {
+    const r = await fetch(path, {
+      ...opts,
+      headers: {
+        'content-type':'application/json',
+        ...(TOKEN ? { authorization:'Bearer '+TOKEN } : {}),
+        ...(opts.headers || {})
+      }
+    });
+    const j = await r.json().catch(()=>({}));
+    if (!r.ok) { const e = new Error(j.error || r.statusText || 'Request failed'); e.status = r.status; throw e; }
+    return j;
+  }
+
+  /* ---------- auth ---------- */
+  function setMode(m){
+    mode = m;
+    const login = m === 'login';
+    $('tabLogin').classList.toggle('active', login);
+    $('tabSignup').classList.toggle('active', !login);
+    $('tabLogin').setAttribute('aria-selected', String(login));
+    $('tabSignup').setAttribute('aria-selected', String(!login));
+    $('authSubmit').textContent = login ? 'Sign in' : 'Create account';
+    $('password').setAttribute('autocomplete', login ? 'current-password' : 'new-password');
+    $('pwHint').textContent = login ? '' : '(8+ characters)';
+    $('authSwitchHint').innerHTML = login
+      ? 'New here? <button type="button" onclick="setMode(\'signup\')" style="background:none;border:none;color:var(--accent);font-weight:600;font-size:12px;cursor:pointer;padding:0;">Create an account</button>'
+      : 'Already have an account? <button type="button" onclick="setMode(\'login\')" style="background:none;border:none;color:var(--accent);font-weight:600;font-size:12px;cursor:pointer;padding:0;">Sign in</button>';
+    $('authErr').textContent = '';
+  }
+
+  async function submitAuth(ev){
+    ev.preventDefault();
+    $('authErr').textContent = '';
+    const email = $('email').value.trim();
+    const password = $('password').value;
+    const path = mode === 'signup' ? '/api/signup' : '/api/login';
+    try {
+      const j = await api(path, { method:'POST', body: JSON.stringify({ email, password }) });
+      TOKEN = j.token;
+      EMAIL = email;
+      sessionStorage.setItem('nb_token', TOKEN);
+      sessionStorage.setItem('nb_email', EMAIL);
+      show();
+    } catch (e) {
+      $('authErr').textContent = e.message;
+    }
+    return false;
+  }
+
+  function logout(){
+    if (pollTimer) clearInterval(pollTimer);
+    sessionStorage.removeItem('nb_token');
+    sessionStorage.removeItem('nb_email');
+    TOKEN = null;
+    location.reload();
+  }
+
+  /* ---------- pairing ---------- */
+  async function makeCode(){
+    const btn = $('genBtn');
+    btn.disabled = true; btn.textContent = 'Generating…';
+    try {
+      const j = await api('/api/pair/start', { method:'POST' });
+      pairCodeVal = j.code;
+      $('pairCode').textContent = j.code;
+      $('pairBox').classList.remove('hidden');
+      $('cmdPair').innerHTML = 'npx apple-notes-agent pair <span class="accent">' + esc(j.code) + '</span>';
+      btn.textContent = 'Generate a new code';
+      done[1] = true;
+      render();
+    } catch (e) {
+      if (e.status === 401) return logout();
+      alert(e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function finishStep3(){ done[3] = true; render(); }
+
+  /* ---------- live status ---------- */
+  async function pollStatus(){
+    if (!TOKEN) return;
+    try {
+      const j = await api('/api/agent/status');
+      online = !!j.online;
+      redisOk = j.redisConfigured !== false;
+      if (online) { everOnline = true; done[1] = true; done[2] = true; }
+      render();
+    } catch (e) {
+      if (e.status === 401) return logout();
+      /* transient network error — keep last known state */
+    }
+  }
+
+  /* ---------- copy helpers ---------- */
+  function copyEl(btn){ doCopy($(btn.dataset.target).textContent, btn); }
+  function copyText(btn){ doCopy(btn.dataset.copy, btn); }
+  function doCopy(text, btn){
+    const label = btn.textContent;
+    const finish = () => { btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(()=>{ btn.textContent = label; btn.classList.remove('copied'); }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(finish).catch(()=>fallbackCopy(text, finish));
+    } else { fallbackCopy(text, finish); }
+  }
+  function fallbackCopy(text, cb){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(_){}
+    document.body.removeChild(ta); cb();
+  }
+  function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function scrollToTop(){ window.scrollTo({ top:0, behavior:'smooth' }); }
+
+  /* ---------- render ---------- */
+  function activeStep(){ return done[3] ? 4 : done[2] ? 3 : done[1] ? 2 : 1; }
+
+  function render(){
+    const act = activeStep();
+
+    // top-bar live status
+    $('topDot').className = 'dot ' + (online ? 'on' : 'off');
+    $('topStatus').textContent = online ? 'Mac connected' : 'Mac offline';
+
+    // step 2 pill
+    const pill = $('agentPill');
+    if (online) {
+      pill.className = 'pill ok';
+      $('pillSpin').style.display = 'none';
+      $('agentText').textContent = 'Mac connected ✓';
+    } else {
+      pill.className = 'pill wait';
+      $('pillSpin').style.display = '';
+      $('agentText').textContent = everOnline ? 'Mac offline — start the agent again' : 'Waiting for your Mac…';
+    }
+
+    // progress bar + indicators
+    const completed = (done[1]?1:0) + (done[2]?1:0) + (done[3]?1:0);
+    $('progFill').style.width = Math.round(completed/3*100) + '%';
+    for (let i=1;i<=4;i++){
+      const isDone = i<=3 ? done[i] : false;   // step 4 ("Try it") stays active, never auto-checked
+      const ind = $('ind'+i), badge = $('badge'+i), snum = $('snum'+i), stepEl = $('step'+i);
+      ind.className = isDone ? 'done' : (i===act ? 'active' : '');
+      badge.textContent = isDone ? '✓' : i;
+      snum.textContent = isDone ? '✓' : i;
+      stepEl.className = 'card step' + (isDone ? ' done' : (i===act ? ' active' : ''));
+      if (i===act) ind.setAttribute('aria-current','step'); else ind.removeAttribute('aria-current');
+    }
+  }
+
+  /* ---------- view switch ---------- */
+  function show(){
+    const authed = !!TOKEN;
+    $('hero').classList.toggle('hidden', authed);
+    $('authCard').classList.toggle('hidden', authed);
+    $('dash').classList.toggle('hidden', !authed);
+    $('account').classList.toggle('hidden', !authed);
+    if (authed) {
+      $('userEmail').textContent = EMAIL || 'Signed in';
+      $('mcpUrl').textContent = location.origin + '/mcp';
+      render();
+      pollStatus();
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(pollStatus, 4000);
+      checkVerified();
+      loadDevices();
+    }
+  }
+
+  /* ---------- paired devices ---------- */
+  function timeAgo(ms){
+    if (!ms) return '';
+    const s = Math.floor((Date.now()-ms)/1000);
+    if (s < 90) return 'just now';
+    const m = Math.floor(s/60); if (m < 60) return m+'m ago';
+    const h = Math.floor(m/60); if (h < 24) return h+'h ago';
+    return Math.floor(h/24)+'d ago';
+  }
+  async function loadDevices(){
+    try {
+      const { devices } = await api('/api/agent/devices');
+      const card = $('devicesCard'), list = $('deviceList');
+      if (!devices || !devices.length){ card.style.display = 'none'; return; }
+      card.style.display = '';
+      list.textContent = '';
+      for (const d of devices){
+        const li = document.createElement('li');
+        const info = document.createElement('div'); info.className = 'dinfo';
+        const name = document.createElement('div'); name.className = 'dname'; name.textContent = d.label || 'Mac';
+        const meta = document.createElement('div'); meta.className = 'dmeta';
+        const paired = d.pairedAt ? new Date(d.pairedAt).toLocaleDateString() : '';
+        meta.textContent = (paired ? 'Paired '+paired : '') + (d.lastSeen ? ' · last seen '+timeAgo(d.lastSeen) : '');
+        info.appendChild(name); info.appendChild(meta);
+        const btn = document.createElement('button'); btn.className = 'remove'; btn.textContent = 'Remove';
+        btn.onclick = () => revokeDeviceAction(d.jti, false);
+        li.appendChild(info); li.appendChild(btn);
+        list.appendChild(li);
+      }
+    } catch { $('devicesCard').style.display = 'none'; }
+  }
+  async function revokeDeviceAction(jti, all){
+    const msg = all ? 'Unpair ALL Macs? Each will stop working until you pair it again.' : 'Remove this Mac? Its agent will stop working until you pair it again.';
+    if (!window.confirm(msg)) return;
+    try {
+      await api('/api/agent/revoke', { method:'POST', body: JSON.stringify(all ? { all:true } : { jti }) });
+      loadDevices();
+    } catch (e) { alert('Could not revoke: ' + (e.message || 'error')); }
+  }
+
+  /* ---------- email verification ---------- */
+  async function checkVerified(){
+    try {
+      const me = await api('/api/me');
+      const show = me.emailVerificationEnabled && !me.verified && !me.demo;
+      $('verifyBanner').classList.toggle('hidden', !show);
+      if (show) $('verifyEmail').textContent = me.email || 'your email';
+    } catch { /* leave banner hidden on error */ }
+  }
+  async function resendVerification(){
+    const btn = $('resendVerify'), msg = $('resendMsg');
+    btn.disabled = true; msg.textContent = ' sending…';
+    try {
+      const r = await api('/api/resend-verification', { method:'POST' });
+      msg.textContent = r.sent ? ' sent ✓' : (r.alreadyVerified ? ' already verified ✓' : ' could not send');
+      if (r.alreadyVerified) $('verifyBanner').classList.add('hidden');
+    } catch { msg.textContent = ' could not send'; }
+    finally { setTimeout(()=>{ btn.disabled = false; }, 4000); }
+  }
+
+  setMode('login');
+  show();
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "$comment": "Config for the OpenAI plugin submission automation. Edit these values to reuse for any MCP plugin. Secrets (the reviewer demo password) are NOT stored here; they are read from ../.env.local by env var name. This schema matches the live 7-section form verified 2026-07-17.",
+  "mcpUrl": "https://notesbridge.vercel.app/mcp",
+  "authentication": "OAuth",
+  "info": {
+    "name": "NotesBridge",
+    "subtitle": "Apple Notes in ChatGPT",
+    "subtitleNote": "Subtitle MUST be 30 characters or fewer (OpenAI validates this).",
+    "description": "NotesBridge connects ChatGPT to the notes on your Mac. Search and read any note, create new ones, append to lists, or rewrite drafts — all from a chat. Your notes never live on our servers: every action is executed on your own Mac by a small open-source agent you install with one command (npx apple-notes-agent), and the relay only carries each request for the seconds it's in flight. Write actions are always confirmed by you in ChatGPT before they happen. Open source (MIT) and self-hostable.",
+    "category": "Productivity",
+    "developerIdentity": "Dupree Ops",
+    "developerIdentityNote": "Substring matched against the verified identities in the dropdown. Requires completing developer identity verification first.",
+    "pluginAuthor": "Isaiah Dupree",
+    "websiteUrl": "https://notesbridge.vercel.app",
+    "supportUrl": "https://notesbridge.vercel.app/support",
+    "privacyUrl": "https://notesbridge.vercel.app/privacy",
+    "termsUrl": "https://notesbridge.vercel.app/terms",
+    "demoRecordingUrl": "https://youtu.be/fvytZG8DC80",
+    "demoRecordingNote": "REQUIRED by OpenAI. A recorded demo hosted on YouTube (Unlisted is fine).",
+    "directoryIcon": "../assets/icon-512.png",
+    "composerIcon": "../assets/icon-512.png",
+    "commerceLinksOutForPurchases": false
+  },
+  "domainVerification": {
+    "note": "MCP section issues a token you must serve at /.well-known/openai-apps-challenge on the MCP hostname. server/api/challenge.js does this (env OPENAI_APPS_CHALLENGE overrides the served token). Deploy, then click Verify Domain. The token is a PUBLIC value, not a secret.",
+    "wellKnownPath": "/.well-known/openai-apps-challenge"
+  },
+  "reviewerDemo": {
+    "note": "Reviewers use these to test the app 24/7 with no Mac (demo mode). The password lives in ../.env.local, never in this file. These are also entered verbatim in the Testing section's Test credentials box.",
+    "email": "reviewer@notesbridge.demo",
+    "passwordEnvVar": "DEMO_PASSWORD"
+  },
+  "prompts": [
+    "List my Apple Notes folders",
+    "Search my Apple Notes for meeting notes",
+    "Create a note titled Groceries with milk, eggs, and coffee"
+  ],
+  "promptsNote": "Up to 3 showcase prompts (Prompts section). They render as @Plugin chat bubbles.",
+  "testCases": [
+    { "scenario": "List Apple Notes folders", "prompt": "List my Apple Notes folders", "tools": "list_folders", "expected": "A list of the demo account's folders — including Notes, Work, and Recipes — each with its note count. (Once the app is approved this renders as a folder-card grid.)" },
+    { "scenario": "Search notes by keyword", "prompt": "Search my Apple Notes for sourdough", "tools": "search", "expected": "Results include the 'Sourdough recipe' note (id demo-4). The model can call fetch to open it." },
+    { "scenario": "Read a note's contents", "prompt": "What's on my grocery list?", "tools": "search, fetch", "expected": "search finds the 'Grocery list' note (id demo-2); fetch returns its contents: milk, eggs, coffee beans, blueberries." },
+    { "scenario": "Create a new note", "prompt": "Create a note titled Demo idea with the body Try NotesBridge", "tools": "create_note", "expected": "ChatGPT confirms the write first, then create_note returns a new note titled 'Demo idea' in the Notes folder with a fresh demo-N id." },
+    { "scenario": "List notes in a specific folder", "prompt": "List the notes in my Work folder", "tools": "list_notes", "expected": "Returns the notes in the Work folder — includes 'Q3 planning' (id demo-3)." }
+  ],
+  "testCasesNote": "Testing section requires EXACTLY 5 positive test cases.",
+  "negativeTestCases": [
+    { "scenario": "A general question about note-taking in the abstract — not a request to act on the user's own Apple Notes. There is nothing to search, read, or write, so NotesBridge should not trigger.", "prompt": "What's a good method for taking meeting notes?" },
+    { "scenario": "The user refers to a different, non-Apple notes or productivity app. NotesBridge only works with Apple Notes and should not trigger for Notion, Evernote, Google Keep, or similar.", "prompt": "Add this to my Notion workspace." },
+    { "scenario": "A reminders or calendar action, not an Apple Notes action. NotesBridge creates and edits notes only; it should not trigger to set reminders or calendar events.", "prompt": "Set a reminder to call the dentist tomorrow at 9am." }
+  ],
+  "negativeTestCasesNote": "Testing section requires EXACTLY 3 negative test cases (prompts where the app should NOT trigger).",
+  "releaseNotes": "Initial release. NotesBridge connects ChatGPT to your Apple Notes through a small open-source agent that runs on your own Mac — search and read any note, create new ones, append to lists, or rewrite drafts. Every write is confirmed by you before it happens. Your notes never live on our servers; the cloud piece is only a stateless relay. Open source (MIT) and self-hostable."
+}

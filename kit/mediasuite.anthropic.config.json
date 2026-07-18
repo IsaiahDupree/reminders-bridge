@@ -1,0 +1,78 @@
+{
+  "$comment": "MediaSuite listing for the Anthropic (Claude) Connectors Directory 11-step portal. Same schema as anthropic.config.json (NotesBridge). Requires a Team/Enterprise Claude org with Owner access. Reviewer creds + seeding are PENDING the demo account (see media-suite/CONNECTOR-PLAN.md gap 3).",
+  "connection": {
+    "serverUrl": "https://media-suite-gateway-production.up.railway.app/v1/mcp",
+    "transport": "streamable-http",
+    "connectionModel": "single-url",
+    "connectionModelNote": "One MCP URL for all users; each user authenticates via OAuth 2.1 to their own MediaSuite workspace (per-user token isolation, server-enforced)."
+  },
+  "listing": {
+    "serverName": "MediaSuite",
+    "serverNameLimit": 100,
+    "tagline": "Plan, schedule & analyze your social content",
+    "taglineLimit": 55,
+    "description": "MediaSuite connects Claude to your creator content workspace — your media library, AI-scored clips, scheduled posts, and cross-platform analytics. Ask what's performing and why, plan a week of short-form posts from one long video, draft and schedule posts across YouTube/Instagram/TikTok/Threads/Pinterest/Bluesky, tailor per-platform captions, generate a media kit or performance brief, search across your transcripts by meaning, and trace which posts drove real revenue. Everything is grounded in your own data (event-sourced in your MediaSuite workspace) — the connector reads and writes only your content, authenticated per-user via OAuth 2.1 with PKCE and Dynamic Client Registration. Publishing goes direct to each platform via your connected accounts; no third-party reposting service. Read tools are read-only; the few write tools (draft, schedule, capture idea, export) are additive and confirmed by you.",
+    "descriptionLimit": 2000,
+    "documentationUrl": "https://mediasuite-site.vercel.app",
+    "privacyPolicyUrl": "https://mediasuite-site.vercel.app/privacy.html",
+    "supportContact": "https://mediasuite-site.vercel.app/support.html",
+    "icon": "site/icon.png",
+    "urlSlug": "mediasuite",
+    "urlSlugNote": "PERMANENT once published.",
+    "categories": ["Productivity", "Marketing"]
+  },
+  "useCases": {
+    "primary": [
+      "Answer 'what's performing?' — top posts, per-format/topic analytics, views trend over time",
+      "Plan a week of shorts from one long-form video across your best posting windows",
+      "Draft and schedule posts with per-platform caption variants",
+      "Generate a media kit (sponsor one-pager) or a performance brief",
+      "Search your spoken content (transcripts) by meaning; trace revenue back to posts"
+    ],
+    "prerequisites": "A MediaSuite workspace with the user's own media + connected social accounts. Reviewers use the demo workspace (seeded, no setup) — PENDING.",
+    "readWrite": "Read and write. 16 read-only tools (library, clips, stats, analytics, accounts, transcripts, attribution, ideas). 5 additive write tools: draft_post, schedule_post, generate_brief, add_idea, export_data (only export_data reaches an external destination)."
+  },
+  "company": {
+    "name": "DUPREE OPS LLC",
+    "website": "https://mediasuite-site.vercel.app",
+    "primaryContactEnvVar": "OWNER_EMAIL",
+    "primaryContactNote": "Primary contact email for review updates; not stored here."
+  },
+  "authentication": {
+    "mode": "oauth",
+    "detail": "OAuth 2.1 + PKCE (S256) + RFC 7591 Dynamic Client Registration. Discovery at /.well-known/oauth-authorization-server and /.well-known/oauth-protected-resource/v1/mcp. Rotating refresh tokens."
+  },
+  "dataHandling": {
+    "firstPartyApi": true,
+    "firstPartyApiNote": "MediaSuite operates its own gateway + Supabase workspace; publishing uses the user's own connected platform accounts (direct platform APIs), not a third-party reposting service.",
+    "personalHealthData": false,
+    "sponsoredContent": false,
+    "conversationDataCollection": "none — the connector reads/writes only the user's own MediaSuite data; no conversation data is retained by the connector."
+  },
+  "reviewerTest": {
+    "note": "Add MediaSuite as a custom connector and authorize via OAuth; on the connector's own consent page enter handle 'demo' and the mcp_ token. The demo user reads an ISOLATED seeded namespace (sample media, clips, published posts + stats-over-time, accounts, ideas) — no real user data is exposed. Verified end-to-end against the live server 2026-07-18 (npm run seed:demo provisions it).",
+    "handle": "demo",
+    "tokenEnvVar": "MEDIASUITE_DEMO_TOKEN",
+    "tokenLocation": "media-suite/.env.local (gitignored) — paste the token value into the portal at submission time",
+    "prompts": [
+      "List my media library",
+      "What are my top posts?",
+      "How have my views trended over the last month?",
+      "Plan a week of shorts from media dm1",
+      "Add a content idea: repurpose the podcast into a carousel"
+    ],
+    "testedEveryTool": true
+  },
+  "compliance": {
+    "note": "Seven mandatory acknowledgments + Anthropic Software Directory Terms & Policy — the OWNER's legal attestations; automation stops before them.",
+    "acknowledgments": [
+      "Directory guidelines",
+      "First-party API usage",
+      "Financial transactions (none initiated by the connector)",
+      "AI media generation (clip/caption generation over the user's own media)",
+      "Prompt-injection safeguards",
+      "Conversation-data-collection restrictions (none collected)",
+      "Public documentation requirement (site + privacy live)"
+    ]
+  }
+}
