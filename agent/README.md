@@ -1,11 +1,11 @@
-# apple-notes-agent
+# apple-reminders-agent
 
-The Mac-side half of **NotesBridge** — it lets ChatGPT and Claude read and write your
-**Apple Notes**. This tiny agent runs on your Mac, connects to the NotesBridge relay,
-and does the actual talking to the Notes app (via macOS automation). Your notes never
+The Mac-side half of **RemindersBridge** — it lets ChatGPT and Claude read and write your
+**Apple Reminders**. This tiny agent runs on your Mac, connects to the RemindersBridge relay,
+and does the actual talking to the Reminders app (via macOS automation). Your reminders never
 leave your machine except for the specific request you make.
 
-- No account, no password, no cloud copy of your notes.
+- No account, no password, no cloud copy of your reminders.
 - One command to pair, one command to keep it running forever.
 - No dependencies — just Node 18+.
 
@@ -16,18 +16,18 @@ leave your machine except for the specific request you make.
 You need [Node.js 18 or newer](https://nodejs.org). Then:
 
 ```sh
-# 1. On the NotesBridge site, click "Connect my Mac" to get a pairing code.
+# 1. On the RemindersBridge site, click "Connect my Mac" to get a pairing code.
 # 2. Pair this Mac (replace ABCD-1234 with your code):
-npx apple-notes-agent pair ABCD-1234
+npx apple-reminders-agent pair ABCD-1234
 
 # 3. Keep it running in the background — starts on login, restarts if it crashes:
-npx apple-notes-agent install
+npx apple-reminders-agent install
 ```
 
 That's it. You can close the terminal — the agent keeps running.
 
-> **First run permission prompt:** the first time the agent touches Apple Notes,
-> macOS shows a one-time prompt asking to allow automation of "Notes". Click **OK**.
+> **First run permission prompt:** the first time the agent touches Apple Reminders,
+> macOS shows a one-time prompt asking to allow automation of "Reminders". Click **OK**.
 > If you miss it, enable it later under
 > **System Settings → Privacy & Security → Automation**.
 
@@ -37,9 +37,9 @@ That's it. You can close the terminal — the agent keeps running.
 For an always-on setup, install it globally so the path is stable:
 
 ```sh
-npm install -g apple-notes-agent
-apple-notes-agent pair ABCD-1234
-apple-notes-agent install
+npm install -g apple-reminders-agent
+apple-reminders-agent pair ABCD-1234
+apple-reminders-agent install
 ```
 
 ---
@@ -48,36 +48,39 @@ apple-notes-agent install
 
 | Command | What it does |
 |---|---|
-| `apple-notes-agent pair <CODE>` | Claim a pairing code and save the agent token to `~/.notesbridge-agent.json` (mode 600). |
-| `apple-notes-agent install` | Install a macOS LaunchAgent so the agent auto-starts on login and restarts on crash. |
-| `apple-notes-agent run` | Run the agent in the foreground (Ctrl-C to stop). `install` does this for you in the background. |
-| `apple-notes-agent status` | Check that you're paired, the server is reachable, and whether auto-start is installed. |
-| `apple-notes-agent logs` | Show the last ~50 lines of the background agent log. |
-| `apple-notes-agent uninstall` | Stop and remove the background agent (LaunchAgent). |
-| `apple-notes-agent --version` | Print the version. |
-| `apple-notes-agent --help` | Show usage. |
+| `apple-reminders-agent pair <CODE>` | Claim a pairing code and save the agent token to `~/.remindersbridge-agent.json` (mode 600). |
+| `apple-reminders-agent install` | Install a macOS LaunchAgent so the agent auto-starts on login and restarts on crash. |
+| `apple-reminders-agent run` | Run the agent in the foreground (Ctrl-C to stop). `install` does this for you in the background. |
+| `apple-reminders-agent status` | Check that you're paired, the server is reachable, and whether auto-start is installed. |
+| `apple-reminders-agent logs` | Show the last ~50 lines of the background agent log. |
+| `apple-reminders-agent uninstall` | Stop and remove the background agent (LaunchAgent). |
+| `apple-reminders-agent --version` | Print the version. |
+| `apple-reminders-agent --help` | Show usage. |
 
 All commands accept `--server <URL>` to point at a different relay
-(default: `https://notesbridge.vercel.app`).
+(default: `https://remindersbridge.vercel.app`).
 
 ---
 
 ## How it works
 
 ```
-ChatGPT / Claude  ──MCP──▶  NotesBridge relay  ◀──poll──  apple-notes-agent (your Mac)
-                                                                   │
-                                                                   ▼
-                                                             Apple Notes (JXA)
+ChatGPT / Claude  ──MCP──▶  RemindersBridge relay  ◀──poll──  apple-reminders-agent (your Mac)
+                                                              │
+                                                              ▼
+                                                              Apple Reminders (JXA)
 ```
 
-The agent long-polls the relay for jobs, runs each one against the Notes app using
+The agent long-polls the relay for jobs, runs each one against the Reminders app using
 Apple's JavaScript automation (JXA / `osascript`), and posts the result back. When
-there's nothing to do it just idles.
+there's nothing to do it just idles. It serves eight tools — `search`, `fetch`,
+`list_lists`, `list_reminders`, `get_reminder`, `create_reminder`, `complete_reminder`,
+and `update_reminder` — which operate on your reminder lists, due dates, and
+completion status.
 
-- Config/token: `~/.notesbridge-agent.json` (permissions `600`).
-- Background logs: `~/Library/Logs/notesbridge-agent.log` and `notesbridge-agent.err.log`.
-- LaunchAgent: `~/Library/LaunchAgents/com.notesbridge.apple-notes-agent.plist`.
+- Config/token: `~/.remindersbridge-agent.json` (permissions `600`).
+- Background logs: `~/Library/Logs/remindersbridge-agent.log` and `remindersbridge-agent.err.log`.
+- LaunchAgent: `~/Library/LaunchAgents/com.remindersbridge.apple-reminders-agent.plist`.
 
 ---
 
@@ -87,34 +90,34 @@ there's nothing to do it just idles.
 Your pairing token may have been revoked. Re-pair and reinstall:
 
 ```sh
-apple-notes-agent pair <NEW-CODE>
-apple-notes-agent install
+apple-reminders-agent pair <NEW-CODE>
+apple-reminders-agent install
 ```
 
-If the background agent hit a `401`, it writes `~/.notesbridge-agent.unauthorized`
-and keeps the reason in the error log — check `apple-notes-agent logs`.
+If the background agent hit a `401`, it writes `~/.remindersbridge-agent.unauthorized`
+and keeps the reason in the error log — check `apple-reminders-agent logs`.
 
-**Notes aren't being read/written.**
-Make sure the Notes app is allowed under
+**Reminders aren't being read/written.**
+Make sure the Reminders app is allowed under
 **System Settings → Privacy & Security → Automation** (allow your terminal / `node`
-to control **Notes**). Then `apple-notes-agent uninstall` and `install` again.
+to control **Reminders**). Then `apple-reminders-agent uninstall` and `install` again.
 
 **Check what's happening.**
 
 ```sh
-apple-notes-agent status   # paired? reachable? auto-start installed?
-apple-notes-agent logs     # recent activity + errors
+apple-reminders-agent status   # paired? reachable? auto-start installed?
+apple-reminders-agent logs     # recent activity + errors
 ```
 
 **Uninstall completely.**
 
 ```sh
-apple-notes-agent uninstall
-rm ~/.notesbridge-agent.json   # also forget the pairing token
+apple-reminders-agent uninstall
+rm ~/.remindersbridge-agent.json   # also forget the pairing token
 ```
 
 **Non-macOS.** `install`/`uninstall`/`logs` are macOS-only (they use LaunchAgents).
-`pair`, `run`, and `status` work anywhere Node runs, but the Notes automation itself
+`pair`, `run`, and `status` work anywhere Node runs, but the Reminders automation itself
 requires macOS.
 
 ---
@@ -122,8 +125,8 @@ requires macOS.
 ## Privacy
 
 The agent only contacts the relay server you paired with. It sends the result of the
-specific note operation you (via ChatGPT/Claude) requested — nothing else. Your notes
-are not uploaded or indexed anywhere.
+specific reminder operation you (via ChatGPT/Claude) requested — nothing else. Your
+reminders are not uploaded or indexed anywhere.
 
 ## License
 

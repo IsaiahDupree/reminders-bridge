@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Authorize — NotesBridge</title>
+<title>Authorize — RemindersBridge</title>
 <style>
   :root{
     --bg:#0f1115; --bg2:#0b0d11; --card:#181b22; --card2:#1c2029;
@@ -67,13 +67,13 @@
       <rect x="8" y="7" width="16" height="18" rx="3" fill="#0b0d11" stroke="#f5b942" stroke-width="1.6"/>
       <path d="M11 12h10M11 16h10M11 20h6" stroke="#f5b942" stroke-width="1.6" stroke-linecap="round"/>
     </svg>
-    <span>Notes<b>Bridge</b></span>
+    <span>Reminders<b>Bridge</b></span>
   </div>
 
-  <h1>Connect ChatGPT to your Apple Notes</h1>
+  <h1>Connect ChatGPT to your Apple Reminders</h1>
 
   <div id="loginView">
-    <p class="muted">Sign in to your NotesBridge account to continue authorizing ChatGPT.</p>
+    <p class="muted">Sign in to your RemindersBridge account to continue authorizing ChatGPT.</p>
     <label for="email">Email</label>
     <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
     <label for="password">Password</label>
@@ -83,20 +83,20 @@
   </div>
 
   <div id="consentView" class="hidden">
-    <p class="muted">ChatGPT is requesting permission to work with your Apple Notes:</p>
+    <p class="muted">ChatGPT is requesting permission to work with your Apple Reminders through your paired Mac:</p>
     <ul class="perms">
       <li>
         <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
-        <span><b>Search &amp; read your notes</b>Find and pull content from your Apple Notes to answer your questions.</span>
+        <span><b>List, search &amp; read your reminders</b>Find and pull reminders and lists from your Apple Reminders to answer your questions.</span>
       </li>
       <li>
         <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-        <span><b>Create &amp; edit notes</b>Add new notes and update existing ones when you ask.</span>
+        <span><b>Create, complete &amp; edit reminders</b>Add new reminders, mark them complete, and update existing ones when you ask.</span>
       </li>
     </ul>
     <div class="safenote">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
-      <span>Everything runs on <b>your own Mac</b> through your paired agent — your notes are never stored on our servers. Any note that creates or edits content is <b>confirmed by you inside ChatGPT</b> before it happens.</span>
+      <span>Everything runs on <b>your own Mac</b> through your paired agent — your reminders are never stored on our servers. Any action that creates or edits a reminder is <b>confirmed by you inside ChatGPT</b> before it happens.</span>
     </div>
     <p class="muted" id="redirectHost" style="font-size:12px;margin-top:2px"></p>
     <button onclick="approve()">Allow</button>
@@ -148,7 +148,7 @@
         state: q.get('state'),
         code_challenge: q.get('code_challenge'),
         code_challenge_method: q.get('code_challenge_method') || 'S256',
-        scope: q.get('scope') || 'notes',
+        scope: q.get('scope') || 'reminders',
       });
       location.href = j.redirect;
     } catch(e){ $('err').textContent = e.message; }

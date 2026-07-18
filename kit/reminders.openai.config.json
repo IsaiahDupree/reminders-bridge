@@ -1,0 +1,54 @@
+{
+  "$comment": "RemindersBridge listing for the OpenAI plugin directory (7-section form). Same schema as submission.config.json (NotesBridge). Secrets (reviewer demo password) are NOT stored here; read from ../.env.local by env var name. PENDING before submit: a hosted demo VIDEO (info.demoRecordingUrl) and the domain-verification token (set OPENAI_APPS_CHALLENGE on Vercel when the MCP section issues it).",
+  "mcpUrl": "https://remindersbridge.vercel.app/mcp",
+  "authentication": "OAuth",
+  "info": {
+    "name": "RemindersBridge",
+    "subtitle": "Apple Reminders in ChatGPT",
+    "subtitleNote": "Subtitle MUST be 30 characters or fewer (OpenAI validates this). This is 26.",
+    "description": "RemindersBridge connects ChatGPT to the Reminders on your Mac. Ask what's due today, add a reminder from a conversation, check things off, or reschedule a due date — all from chat, across every list. Your reminders never live on our servers: every action is executed on your own Mac by a small open-source agent you install with one command (npx apple-reminders-agent), and the relay only carries each request for the seconds it's in flight. Write actions are always confirmed by you in ChatGPT before they happen. Open source (MIT) and self-hostable.",
+    "category": "Productivity",
+    "developerIdentity": "Dupree Ops",
+    "developerIdentityNote": "Substring matched against the verified identities in the dropdown (Dupree Ops LLC). Identity verification already completed for the NotesBridge/MediaSuite submissions.",
+    "pluginAuthor": "Isaiah Dupree",
+    "websiteUrl": "https://remindersbridge.vercel.app",
+    "supportUrl": "https://remindersbridge.vercel.app/support",
+    "privacyUrl": "https://remindersbridge.vercel.app/privacy",
+    "termsUrl": "https://remindersbridge.vercel.app/terms",
+    "demoRecordingUrl": "PENDING — record a demo of RemindersBridge in ChatGPT (demo account) and upload Unlisted to YouTube, then paste the URL here.",
+    "demoRecordingNote": "REQUIRED by OpenAI. A recorded demo hosted on YouTube (Unlisted is fine).",
+    "directoryIcon": "../assets/icon-512.png",
+    "composerIcon": "../assets/icon-512.png",
+    "commerceLinksOutForPurchases": false
+  },
+  "domainVerification": {
+    "note": "The MCP section issues a token you must serve at /.well-known/openai-apps-challenge on the MCP hostname. server/api/challenge.js serves it from the OPENAI_APPS_CHALLENGE env var. Set it on Vercel (`vercel env add OPENAI_APPS_CHALLENGE production`), redeploy, then click Verify Domain. The token is a PUBLIC value, not a secret.",
+    "wellKnownPath": "/.well-known/openai-apps-challenge"
+  },
+  "reviewerDemo": {
+    "note": "Reviewers use these to test the app 24/7 with no Mac (demo mode). The account authenticates on the OAuth consent page with email + password; the password lives in ../.env.local, never in this file. Enter the same values verbatim in the Testing section's Test credentials box. The demo account serves server-side sample reminders (isolated per user), so no real data is ever exposed.",
+    "email": "reviewer@remindersbridge.demo",
+    "passwordEnvVar": "DEMO_PASSWORD"
+  },
+  "prompts": [
+    "What reminders do I have due today?",
+    "Add a reminder to call the dentist tomorrow at 3pm",
+    "What's on my Groceries list?"
+  ],
+  "promptsNote": "Up to 3 showcase prompts (Prompts section). They render as @Plugin chat bubbles.",
+  "testCases": [
+    { "scenario": "List reminder lists", "prompt": "What reminder lists do I have?", "tools": "list_lists", "expected": "Returns the demo account's lists with open counts — Reminders (3 open), Work (1 open of 2), and Groceries (2 open)." },
+    { "scenario": "See what's due", "prompt": "What reminders do I have coming up?", "tools": "list_reminders", "expected": "Incomplete reminders, soonest due first: 'Ship connector review' (Work, due today), 'Buy oat milk' (due tomorrow), then 'Renew passport' (~3 weeks out); completed items are hidden." },
+    { "scenario": "Search reminders by keyword", "prompt": "Search my reminders for dentist", "tools": "search", "expected": "Finds 'Call the dentist' (id demo-2). The model can call fetch/get_reminder to open it and read its note ('Ask about the 9am slot')." },
+    { "scenario": "Create a reminder (write, confirmed)", "prompt": "Add coffee filters to my Groceries list", "tools": "create_reminder", "expected": "ChatGPT confirms the write first, then create_reminder returns a new reminder 'coffee filters' in the Groceries list with a fresh demo-N id." },
+    { "scenario": "Complete a reminder (write, confirmed)", "prompt": "Mark 'Buy oat milk' as done", "tools": "get_reminder, complete_reminder", "expected": "ChatGPT confirms, then the reminder 'Buy oat milk' (id demo-1) comes back with completed: true." }
+  ],
+  "testCasesNote": "Testing section requires EXACTLY 5 positive test cases; run against the seeded demo reminders.",
+  "negativeTestCases": [
+    { "scenario": "A general question about staying organized in the abstract — not a request to act on the user's own Apple Reminders. There is nothing to list, search, or write, so RemindersBridge should not trigger.", "prompt": "What's a good system for remembering to follow up on things?" },
+    { "scenario": "The user refers to a different, non-Apple reminders/to-do app. RemindersBridge only works with Apple Reminders and should not trigger for Todoist, Things, Google Tasks, or similar.", "prompt": "Add this to my Todoist inbox." },
+    { "scenario": "A notes or document action, not a reminder. RemindersBridge creates and edits reminders only; it should not trigger to write an Apple Note or a document.", "prompt": "Create a note with the summary of this meeting." }
+  ],
+  "negativeTestCasesNote": "Testing section requires EXACTLY 3 negative test cases (prompts where the app should NOT trigger).",
+  "releaseNotes": "Initial release. RemindersBridge connects ChatGPT to your Apple Reminders through a small open-source agent that runs on your own Mac — see what's due, add reminders, check things off, and reschedule due dates across all your lists. Every write is confirmed by you before it happens. Your reminders never live on our servers; the cloud piece is only a stateless relay. Open source (MIT) and self-hostable."
+}

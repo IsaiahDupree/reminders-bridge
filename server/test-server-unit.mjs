@@ -100,7 +100,7 @@ test('redis memory: lpush+rpop is FIFO', async () => {
 // ---- relay long-poll ----
 test('waitForJob returns immediately when a job is queued', async () => {
   await redis.del('jobs:u');
-  await redis.lpush('jobs:u', JSON.stringify({ jobId: 'j', tool: 'listFolders', args: {} }));
+  await redis.lpush('jobs:u', JSON.stringify({ jobId: 'j', tool: 'list_lists', args: {} }));
   const t0 = Date.now();
   const job = await waitForJob('u', 5);
   assert.equal(job.jobId, 'j');

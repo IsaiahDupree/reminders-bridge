@@ -1,19 +1,18 @@
-# NotesBridge — App Directory Submission Playbook
+# RemindersBridge — App Directory Submission Playbook
 
-Everything needed to submit NotesBridge to the OpenAI app directory (apps SDK /
+Everything needed to submit RemindersBridge to the OpenAI app directory (apps SDK /
 connector review), what's already done, and what only the account owner can do.
 
 ## Status: what's built and verified
 
 | Requirement | Status | Proof |
 |---|---|---|
-| MCP server, streamable HTTP, OAuth 2.1 + PKCE + DCR | ✅ live | `https://notesbridge.vercel.app/mcp`; e2e suite |
-| Privacy policy | ✅ live | https://notesbridge.vercel.app/privacy (accurate: Supabase + Vercel subprocessors, transient job payloads, no note retention) |
-| Support page | ✅ live | https://notesbridge.vercel.app/support |
+| MCP server, streamable HTTP, OAuth 2.1 + PKCE + DCR | ✅ live | `https://remindersbridge.vercel.app/mcp`; e2e suite |
+| Privacy policy | ✅ live | https://remindersbridge.vercel.app/privacy (accurate: Supabase + Vercel subprocessors, transient job payloads, no reminder retention) |
+| Support page | ✅ live | https://remindersbridge.vercel.app/support |
 | Rate limiting on auth + OAuth endpoints | ✅ live | signup 5/10min, login 10/10min, authorize 30/10min, token 60/min, register 20/hr, claim 10/10min — 429 verified in e2e |
-| **Reviewer demo mode** | ✅ live | Any account with email `reviewer@notesbridge.demo` runs all 8 tools against server-side sample notes — works 24/7 with **no Mac agent**. Real accounts are unaffected. Verified in e2e (search/create/re-read with zero agents running). |
+| **Reviewer demo mode** | ✅ live | Any account with email `reviewer@remindersbridge.demo` runs all 8 tools against server-side sample reminders — works 24/7 with **no Mac agent**. Real accounts are unaffected. Verified in e2e (search/create/complete with zero agents running). |
 | Onboarding UX | ✅ live | 4-step wizard with live agent status at the root URL |
-| Apps SDK UI component | ✅ built & wired | `ui://widget/notes.html` on the 5 read tools (folders/notes/search/note cards). Protocol-verified live. **Renders only once the app is approved** — developer-mode connectors display tool output as text (confirmed empirically with both `text/html+skybridge` and `text/html;profile=mcp-app`). No effect on the working connector; e2e stays green. |
 | 512×512 icon | ✅ | `assets/icon-512.png` |
 | OAuth tool scan | ✅ live | Form "Scan Tools" completes the OAuth consent and discovers all 8 tools |
 | Domain verification | ✅ live | `/.well-known/openai-apps-challenge` (`server/api/challenge.js`) — form shows "Domain verified" |
@@ -36,7 +35,7 @@ done by you.)*
    already shows a base "Verified" status, but plugin creation needs this
    developer-identity tier on top of it.)*
 2. **Keep the demo credentials handy** for the form:
-   - Email: `reviewer@notesbridge.demo`
+   - Email: `reviewer@remindersbridge.demo`
    - Password: the `DEMO_PASSWORD` value in `.env.local` (already created &
      verified — do not rotate it after submitting; reviewers use it)
 3. **Create the plugin & fill the form.** Back at Plugins → Create plugin →
@@ -48,7 +47,7 @@ done by you.)*
       Identity (custom comboboxes), author, Website/Support/Privacy/Terms URLs,
       Demo Recording URL (required — the YouTube link), two icon uploads. All
       paste-ready in **LISTING.md**.
-   2. **MCP** — MCP Server URL `https://notesbridge.vercel.app/mcp`;
+   2. **MCP** — MCP Server URL `https://remindersbridge.vercel.app/mcp`;
       Authentication **OAuth** (auto-discovers config from our `/.well-known`
       metadata); **Domain verification** — the form issues a token you must
       serve at `/.well-known/openai-apps-challenge` (our `server/api/challenge.js`
@@ -58,7 +57,7 @@ done by you.)*
       per annotation per tool (Read Only / Open World / Destructive) explaining
       why it's accurate.
    3. **Skills** — none; click **Skip**.
-   4. **Prompts** — up to 3 showcase prompts (list / search / create).
+   4. **Prompts** — up to 3 showcase prompts (list lists / search / create reminder).
    5. **Testing** — reviewer demo credentials (email + `DEMO_PASSWORD`), exactly
       **5 positive** test cases (scenario / user prompt / tool / expected) and
       exactly **3 negative** test cases (scenario + prompt where the app should
@@ -74,8 +73,8 @@ done by you.)*
 All paste-ready form values (name, tagline, description, URLs, demo credentials,
 test prompts + expected responses, OAuth endpoints) live in **LISTING.md**.
 
-*(Copy refers to "the notes on your Mac" / Notes app descriptively; the product
-name and branding contain no Apple marks.)*
+*(Copy refers to "the reminders on your Mac" / Reminders app descriptively; the
+product name and branding contain no Apple marks.)*
 
 ## Review risks & mitigations
 
@@ -86,11 +85,12 @@ name and branding contain no Apple marks.)*
 - **Latency.** A tool call round-trips through the queue to a polling agent
   (~1.5–4s typical). Within MCP norms; the relay caps waits at 50s and jobs
   expire at 45s so nothing runs stale.
-- **Apple trademark.** Product is "NotesBridge"; copy says "your Apple Notes"
-  descriptively only; the icon is generic (note + bridge). Do not use Apple's
-  Notes app icon or "Apple" in the product name.
-- **Destructive tools.** `update_note` is annotated `destructiveHint`; ChatGPT
-  prompts for confirmation. Called out in the consent screen and privacy page.
+- **Apple trademark.** Product is "RemindersBridge"; copy says "your Apple Reminders"
+  descriptively only; the icon is generic (checklist + bridge). Do not use Apple's
+  Reminders app icon or "Apple" in the product name.
+- **Destructive tools.** The write tools (`create_reminder`, `complete_reminder`,
+  `update_reminder`) are annotated `destructiveHint`; ChatGPT prompts for
+  confirmation. Called out in the consent screen and privacy page.
 
 ## Fallback plan
 
@@ -125,5 +125,5 @@ connector automation: **[kit/README.md](./kit/README.md)**.
 
 ```bash
 node test/e2e-oauth.mjs        # 22 checks, includes demo-mode + rate limits
-curl -s https://notesbridge.vercel.app/api/health   # all flags true
+curl -s https://remindersbridge.vercel.app/api/health   # all flags true
 ```

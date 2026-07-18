@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * NotesBridge → ChatGPT connector registration kit.
+ * RemindersBridge → ChatGPT connector registration kit.
  *
  * Automates: Settings → Apps & Connectors → Advanced → Developer mode ON →
- * Connectors "Create" form → NotesBridge OAuth popup (sign in + Allow) →
+ * Connectors "Create" form → RemindersBridge OAuth popup (sign in + Allow) →
  * verify the connector exists → screenshot proof.
  *
  * Reuses the persistent agent Chrome profile (chrome-bridge, CDP on :9222).
@@ -11,11 +11,11 @@
  * Env flags:
  *   PREFLIGHT_ONLY=1  preflight + CDP connect + chatgpt.com login-state
  *                     detection + screenshots/01-chatgpt-state.png, then exit.
- *   CHAT_TEST=1       after registration, open a chat, attach NotesBridge,
- *                     ask it to list Apple Notes folders, screenshot reply.
+ *   CHAT_TEST=1       after registration, open a chat, attach RemindersBridge,
+ *                     ask it to list Apple Reminders folders, screenshot reply.
  *
  * Config: NB_SERVER / NB_EMAIL / NB_PASSWORD from env first, falling back to
- * /Users/isaiahdupree/Software/notesbridge/.env.local
+ * /Users/isaiahdupree/Software/reminders-bridge/.env.local
  *
  * Defensive pattern for EVERY UI step: try known selectors / text lookup;
  * on failure screenshot NN-<step>-FAILED.png, print exactly what to click
@@ -29,9 +29,9 @@ import puppeteer from 'puppeteer-core';
 
 // ---------------------------------------------------------------- constants
 
-const KIT_DIR = '/Users/isaiahdupree/Software/notesbridge/kit';
+const KIT_DIR = '/Users/isaiahdupree/Software/reminders-bridge/kit';
 const SHOTS_DIR = path.join(KIT_DIR, 'screenshots');
-const ENV_FILE = '/Users/isaiahdupree/Software/notesbridge/.env.local';
+const ENV_FILE = '/Users/isaiahdupree/Software/reminders-bridge/.env.local';
 const LAUNCHER = '/Users/isaiahdupree/Documents/Chrome/chrome-bridge/chrome-launcher.sh';
 const CDP_URL = 'http://127.0.0.1:9222';
 const CHATGPT_URL = 'https://chatgpt.com';
@@ -40,8 +40,8 @@ const CHATGPT_URL = 'https://chatgpt.com';
 // (skips the settings→advanced→developer-mode navigation entirely). Verified live.
 const PLUGINS_URL = 'https://chatgpt.com/#settings/Plugins';
 const CREATE_DEEPLINK = 'https://chatgpt.com/plugins#settings/Connectors?create-connector=true';
-const CONNECTOR_NAME = 'NotesBridge';
-const CONNECTOR_DESC = 'Apple Notes on my Mac';
+const CONNECTOR_NAME = 'RemindersBridge';
+const CONNECTOR_DESC = 'Apple Reminders on my Mac';
 
 const PREFLIGHT_ONLY = process.env.PREFLIGHT_ONLY === '1';
 const CHAT_TEST = process.env.CHAT_TEST === '1';
@@ -169,7 +169,7 @@ async function preflight(cfg) {
   const ok = body.redisConfigured && body.redisOk && body.jwtSecretSet;
   log(`preflight: ${JSON.stringify(body)}`);
   if (!ok) {
-    console.error('\nPREFLIGHT FAILED — the NotesBridge server is not ready:');
+    console.error('\nPREFLIGHT FAILED — the RemindersBridge server is not ready:');
     if (!body.redisConfigured) console.error('  - redisConfigured=false → set the Redis/KV env vars (UPSTASH/KV URL + token) in Vercel project settings.');
     if (body.redisConfigured && !body.redisOk) console.error('  - redisOk=false → Redis is configured but unreachable; check the Upstash/KV instance and credentials.');
     if (!body.jwtSecretSet) console.error('  - jwtSecretSet=false → set JWT_SECRET in Vercel project settings.');
@@ -475,9 +475,9 @@ async function createFormVisible(page) {
   }).catch(() => false);
 }
 
-// The post-Create modal: "Add NotesBridge to ChatGPT" with a "Sign in with NotesBridge" button.
+// The post-Create modal: "Add RemindersBridge to ChatGPT" with a "Sign in with RemindersBridge" button.
 async function signInButtonVisible(page) {
-  return textExists(page, ['Sign in with NotesBridge', 'Sign in with']);
+  return textExists(page, ['Sign in with RemindersBridge', 'Sign in with']);
 }
 
 async function createConnector(page, cfg, oauthSeen) {
@@ -543,7 +543,7 @@ async function createConnector(page, cfg, oauthSeen) {
       return false;
     });
     if (!clicked) throw new Error('"Create" button not found or disabled');
-    // Post-create, ChatGPT shows "Add NotesBridge to ChatGPT" with a sign-in button.
+    // Post-create, ChatGPT shows "Add RemindersBridge to ChatGPT" with a sign-in button.
     await waitFor(async () => (await signInButtonVisible(page)) || (await oauthSeen()) || (await connectorListed(page)),
       { timeoutMs: 20000, intervalMs: 1000, desc: 'sign-in modal / OAuth page' });
   }, {
@@ -552,13 +552,13 @@ async function createConnector(page, cfg, oauthSeen) {
   });
   await shot(page, 'after-create');
 
-  // Launch OAuth from the "Add NotesBridge to ChatGPT" modal (unless it already opened).
+  // Launch OAuth from the "Add RemindersBridge to ChatGPT" modal (unless it already opened).
   if (await signInButtonVisible(page)) {
-    await step(page, 'launch OAuth (sign in with NotesBridge)', async () => {
-      const res = await clickByText(page, ['Sign in with NotesBridge', 'Sign in with']);
-      if (!res.clicked) throw new Error('"Sign in with NotesBridge" button not found');
+    await step(page, 'launch OAuth (sign in with RemindersBridge)', async () => {
+      const res = await clickByText(page, ['Sign in with RemindersBridge', 'Sign in with']);
+      if (!res.clicked) throw new Error('"Sign in with RemindersBridge" button not found');
     }, {
-      manual: ['Click "Sign in with NotesBridge" to start the OAuth authorization.'],
+      manual: ['Click "Sign in with RemindersBridge" to start the OAuth authorization.'],
       postCondition: async () => (await oauthSeen()) || (await connectorListed(page)),
     });
   }
@@ -587,22 +587,22 @@ function makeOAuthWatcher(browser, chatPage, nbOrigin) {
 }
 
 async function completeOAuth(browser, chatPage, cfg, watcher) {
-  log('waiting for NotesBridge OAuth page (popup tab or same tab)...');
+  log('waiting for RemindersBridge OAuth page (popup tab or same tab)...');
   let oauthPage = null;
   try {
-    oauthPage = await waitFor(watcher.getPage, { timeoutMs: 120000, intervalMs: 750, desc: 'NotesBridge OAuth page' });
+    oauthPage = await waitFor(watcher.getPage, { timeoutMs: 120000, intervalMs: 750, desc: 'RemindersBridge OAuth page' });
   } catch {
     // Maybe OAuth already completed silently (existing grant) — check connector list.
-    if (await pageContains(chatPage, 'NotesBridge')) {
-      log('no OAuth page appeared but NotesBridge is already listed — continuing.');
+    if (await pageContains(chatPage, 'RemindersBridge')) {
+      log('no OAuth page appeared but RemindersBridge is already listed — continuing.');
       return;
     }
     loud([
-      'The NotesBridge OAuth window did not open.',
+      'The RemindersBridge OAuth window did not open.',
       'If a popup was blocked, allow popups for chatgpt.com and click the connector /',
       '"Connect" again. The script polls for the OAuth page and resumes.',
     ]);
-    oauthPage = await waitFor(watcher.getPage, { timeoutMs: 0, intervalMs: 5000, desc: 'NotesBridge OAuth page (manual)' });
+    oauthPage = await waitFor(watcher.getPage, { timeoutMs: 0, intervalMs: 5000, desc: 'RemindersBridge OAuth page (manual)' });
   }
   await oauthPage.bringToFront().catch(() => {});
   log(`OAuth page: ${oauthPage.url()}`);
@@ -638,7 +638,7 @@ async function completeOAuth(browser, chatPage, cfg, watcher) {
       if (!st.consent) throw new Error(`OAuth login failed: ${st.err || 'no consent view'}`);
     }, {
       manual: [
-        'Complete the NotesBridge sign-in manually in the OAuth window:',
+        'Complete the RemindersBridge sign-in manually in the OAuth window:',
         `  Email:    ${cfg.NB_EMAIL}`,
         '  Password: (NB_PASSWORD from .env.local)',
         '  Click "Sign in & continue" (or "Create account & continue" if the account is new).',
@@ -660,7 +660,7 @@ async function completeOAuth(browser, chatPage, cfg, watcher) {
     if (!res.clicked) throw new Error('"Allow" button not found');
     await waitFor(redirected, { timeoutMs: 60000, intervalMs: 750, desc: 'redirect back to ChatGPT / popup close' });
   }, {
-    manual: ['Click "Allow" in the NotesBridge consent window.'],
+    manual: ['Click "Allow" in the RemindersBridge consent window.'],
     postCondition: redirected,
   });
   log('OAuth complete — redirected back / popup closed.');
@@ -670,7 +670,7 @@ async function completeOAuth(browser, chatPage, cfg, watcher) {
 // ------------------------------------------------------------------ verify
 
 async function verifyConnector(page) {
-  log('verifying the NotesBridge connector exists in the connectors list...');
+  log('verifying the RemindersBridge connector exists in the connectors list...');
   await page.bringToFront().catch(() => {});
   await gotoSafe(page, `${CHATGPT_URL}/#settings/Connectors`);
   if (!(await connectorsSettingsVisible(page))) {
@@ -679,26 +679,26 @@ async function verifyConnector(page) {
   }
   let found = false;
   try {
-    await waitFor(() => pageContains(page, 'NotesBridge'), { timeoutMs: 60000, intervalMs: 2000, desc: 'NotesBridge in connectors list' });
+    await waitFor(() => pageContains(page, 'RemindersBridge'), { timeoutMs: 60000, intervalMs: 2000, desc: 'RemindersBridge in connectors list' });
     found = true;
   } catch {
     await shot(page, 'verify-FAILED');
     loud([
-      'Could not see "NotesBridge" in Settings → Apps & Connectors.',
+      'Could not see "RemindersBridge" in Settings → Apps & Connectors.',
       'Check the "Created by me" section manually; if it is missing, re-run this script.',
       'Polling up to 5 more minutes for it to appear...',
     ]);
     try {
-      await waitFor(() => pageContains(page, 'NotesBridge'), { timeoutMs: 300000, intervalMs: 5000, desc: 'NotesBridge (manual)' });
+      await waitFor(() => pageContains(page, 'RemindersBridge'), { timeoutMs: 300000, intervalMs: 5000, desc: 'RemindersBridge (manual)' });
       found = true;
     } catch { /* fall through */ }
   }
   if (!found) {
-    console.error('\nVERIFICATION FAILED — NotesBridge connector not visible in the connectors list.');
+    console.error('\nVERIFICATION FAILED — RemindersBridge connector not visible in the connectors list.');
     process.exit(1);
   }
   const createdByMe = await pageContains(page, 'Created by me');
-  log(`VERIFIED: NotesBridge connector is listed${createdByMe ? ' (a "Created by me" section is present)' : ''}.`);
+  log(`VERIFIED: RemindersBridge connector is listed${createdByMe ? ' (a "Created by me" section is present)' : ''}.`);
   await shot(page, 'connector-verified');
 }
 
@@ -709,7 +709,7 @@ async function chatTest(page) {
   await gotoSafe(page, CHATGPT_URL);
   await page.waitForSelector('#prompt-textarea, form [contenteditable="true"]', { timeout: 30000 }).catch(() => {});
 
-  await step(page, 'attach NotesBridge connector', async () => {
+  await step(page, 'attach RemindersBridge connector', async () => {
     const plusClicked = await page.evaluate(() => {
       const el = document.querySelector('[data-testid="composer-plus-btn"], button[aria-label="Add"], button[aria-label*="Attach"]');
       if (el) { el.click(); return true; }
@@ -720,13 +720,13 @@ async function chatTest(page) {
     // The connector may be nested under "More" / "Connectors"
     await clickByText(page, ['Connectors', 'More']);
     await sleep(1500);
-    const res = await clickByText(page, ['NotesBridge']);
-    if (!res.clicked) throw new Error('NotesBridge entry not found in the + menu');
+    const res = await clickByText(page, ['RemindersBridge']);
+    if (!res.clicked) throw new Error('RemindersBridge entry not found in the + menu');
     await page.keyboard.press('Escape').catch(() => {});
     await sleep(500);
   }, {
     manual: [
-      'Attach the connector manually: click "+" in the composer → More/Connectors → NotesBridge.',
+      'Attach the connector manually: click "+" in the composer → More/Connectors → RemindersBridge.',
       '(If you skip this, the model may still route to the connector — continuing either way.)',
     ],
     optional: true,
@@ -735,7 +735,7 @@ async function chatTest(page) {
 
   const baseline = await page.evaluate(() => document.querySelectorAll('[data-message-author-role="assistant"]').length).catch(() => 0);
   await page.click('#prompt-textarea').catch(() => {});
-  await page.type('#prompt-textarea', 'Use NotesBridge to list my Apple Notes folders', { delay: 20 });
+  await page.type('#prompt-textarea', 'Use RemindersBridge to list my Apple Reminders folders', { delay: 20 });
   await page.keyboard.press('Enter');
   log('prompt sent — waiting up to 90s for a reply...');
   try {

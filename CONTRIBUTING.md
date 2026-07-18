@@ -1,14 +1,14 @@
-# Contributing to NotesBridge
+# Contributing to RemindersBridge
 
-Thanks for your interest! NotesBridge is three small pieces — the Vercel relay
-(`server/`), the `apple-notes-agent` CLI (`agent/`), and the connector kit
+Thanks for your interest! RemindersBridge is three small pieces — the Vercel relay
+(`server/`), the `apple-reminders-agent` CLI (`agent/`), and the connector kit
 (`kit/`). Contributions of any size are welcome.
 
 ## Getting set up
 
 ```bash
-git clone https://github.com/IsaiahDupree/notesbridge
-cd notesbridge
+git clone https://github.com/IsaiahDupree/reminders-bridge
+cd reminders-bridge
 
 # server (relay)
 cd server && cp .env.example .env.local   # fill in Supabase + JWT_SECRET
@@ -39,6 +39,6 @@ end-to-end test (`test/e2e-oauth.mjs`) runs against a live deployment and reads
 
 ## Pull requests
 
-Keep PRs focused, describe what changed and why, and note anything you couldn't
+Keep PRs focused, describe what changed and why, and flag anything you couldn't
 test. By contributing you agree your work is licensed under the repository's
 [MIT License](./LICENSE).

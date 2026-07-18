@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Support — NotesBridge</title>
+<title>Support — RemindersBridge</title>
 <style>
   :root { --bg:#0f1115; --card:#181b22; --text:#e8eaf0; --muted:#9aa1af; --accent:#f5b942; --border:#2a2f3a; }
   * { box-sizing:border-box; margin:0; }
@@ -21,7 +21,7 @@
 </head>
 <body>
 <main>
-  <h1>Notes<span>Bridge</span> Support</h1>
+  <h1>Reminders<span>Bridge</span> Support</h1>
 
   <div class="card">
     <p><b>Contact:</b> <a href="mailto:isaiahdupree33@gmail.com">isaiahdupree33@gmail.com</a> — we aim to respond within 2 business days.</p>
@@ -29,21 +29,21 @@
 
   <h2>Common issues</h2>
   <ul>
-    <li><b>"Your Mac agent is offline."</b> Start it on your Mac with <code>apple-notes-agent run</code> and make sure the Mac is awake (tip: <code>caffeinate -s</code> while plugged in).</li>
-    <li><b>macOS says it can't control Notes.</b> System Settings → Privacy &amp; Security → Automation → allow your terminal app to control Notes.</li>
-    <li><b>Notes from iPhone missing.</b> Confirm iCloud Notes sync is enabled on both the iPhone and the Mac (Settings → iCloud → Notes).</li>
+    <li><b>"Your Mac agent is offline."</b> Start it on your Mac with <code>apple-reminders-agent run</code> and make sure the Mac is awake (tip: <code>caffeinate -s</code> while plugged in).</li>
+    <li><b>macOS says it can't control Reminders.</b> System Settings → Privacy &amp; Security → Automation → allow your terminal app to control Reminders.</li>
+    <li><b>Reminders from iPhone missing.</b> Confirm iCloud Reminders sync is enabled on both the iPhone and the Mac (Settings → iCloud → Reminders).</li>
     <li><b>Connector shows unauthorized.</b> Remove and re-add the connector in your assistant to refresh the OAuth grant.</li>
-    <li><b>Locked notes don't appear.</b> Password-protected notes are excluded from automation by macOS — this is by design.</li>
+    <li><b>New reminders land in the wrong list.</b> Reminders you create without naming a list go to your default Reminders list — set it in the Reminders app (Settings → Reminders → Default List), or name the target list when you ask.</li>
   </ul>
 
   <h2>Uninstall / revoke access</h2>
   <ul>
-    <li>Stop and unpair the Mac agent: quit the process and delete <code>~/.apple-notes-agent.json</code>.</li>
+    <li>Stop and unpair the Mac agent: quit the process and delete <code>~/.apple-reminders-agent.json</code>.</li>
     <li>Remove the connector in your assistant's settings.</li>
     <li>Email us to delete your account and all associated data.</li>
   </ul>
 
-  <p><a href="/">← Back to NotesBridge</a> · <a href="/privacy">Privacy Policy</a></p>
+  <p><a href="/">← Back to RemindersBridge</a> · <a href="/privacy">Privacy Policy</a></p>
 </main>
 </body>
 </html>

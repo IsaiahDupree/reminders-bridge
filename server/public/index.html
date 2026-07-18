@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NotesBridge — Use your Apple Notes in ChatGPT</title>
+<title>RemindersBridge — Use your Apple Reminders in ChatGPT</title>
 <style>
   :root{
     --bg:#0f1115; --bg2:#0b0d11; --card:#181b22; --card2:#1c2029;
@@ -169,7 +169,7 @@
         <rect x="8" y="7" width="16" height="18" rx="3" fill="#0b0d11" stroke="#f5b942" stroke-width="1.6"/>
         <path d="M11 12h10M11 16h10M11 20h6" stroke="#f5b942" stroke-width="1.6" stroke-linecap="round"/>
       </svg>
-      <span>Notes<b>Bridge</b></span>
+      <span>Reminders<b>Bridge</b></span>
     </div>
     <div class="account hidden" id="account">
       <span class="live" title="Live agent status">
@@ -182,12 +182,12 @@
 
   <!-- ===== Hero (signed-out) ===== -->
   <section class="hero" id="hero">
-    <h1>Use your Apple Notes<br>in <b>ChatGPT</b></h1>
-    <p class="lead">Search, read, and write your Apple Notes from any ChatGPT chat — powered securely by your own Mac.</p>
+    <h1>Use your Apple Reminders<br>in <b>ChatGPT</b></h1>
+    <p class="lead">Search, add, and check off your Apple Reminders from any ChatGPT chat — powered securely by your own Mac.</p>
     <div class="flow" aria-hidden="true">
       <span class="node"><span class="d"></span>ChatGPT</span>
       <span class="arrow">&#8596;</span>
-      <span class="node"><span class="d"></span>NotesBridge relay</span>
+      <span class="node"><span class="d"></span>RemindersBridge relay</span>
       <span class="arrow">&#8596;</span>
       <span class="node"><span class="d"></span>Your Mac</span>
     </div>
@@ -215,7 +215,7 @@
 
     <div class="banner hidden" id="redisWarn" role="status">
       <span aria-hidden="true">&#9888;</span>
-      <span><b>Server storage isn't fully configured yet.</b> Pairing and connections may not persist. If you host NotesBridge yourself, set up Redis (see the project setup docs).</span>
+      <span><b>Server storage isn't fully configured yet.</b> Pairing and connections may not persist. If you host RemindersBridge yourself, set up Redis (see the project setup docs).</span>
     </div>
 
     <div class="banner hidden" id="verifyBanner" role="status">
@@ -240,18 +240,18 @@
     <div class="card step" id="step1">
       <div class="head"><span class="snum" id="snum1">1</span><h2>Install the Mac agent</h2></div>
       <div class="body">
-        <p class="desc">A tiny helper runs on your Mac and answers your ChatGPT requests. Your notes stay on your machine — only the specific results you ask for are relayed.</p>
+        <p class="desc">A tiny helper runs on your Mac and answers your ChatGPT requests. Your reminders stay on your machine — only the specific results you ask for are relayed.</p>
         <p class="note">1. Pair your Mac to this account (get your code in Step 2, then run):</p>
         <div class="cmd">
-          <div class="code" id="cmdPair">npx apple-notes-agent pair <span class="accent">&lt;CODE&gt;</span></div>
+          <div class="code" id="cmdPair">npx apple-reminders-agent pair <span class="accent">&lt;CODE&gt;</span></div>
           <button class="copy" data-target="cmdPair" onclick="copyEl(this)" aria-label="Copy pair command">Copy</button>
         </div>
         <p class="note">2. Keep it running automatically after every restart:</p>
         <div class="cmd">
-          <div class="code" id="cmdInstall">npx apple-notes-agent install</div>
+          <div class="code" id="cmdInstall">npx apple-reminders-agent install</div>
           <button class="copy" data-target="cmdInstall" onclick="copyEl(this)" aria-label="Copy install command">Copy</button>
         </div>
-        <p class="note">Requires <code>Node.js</code>. On first run macOS will ask permission for the agent to control Apple Notes — click Allow.</p>
+        <p class="note">Requires <code>Node.js</code>. On first run macOS will ask permission for the agent to control Apple Reminders — click Allow.</p>
       </div>
     </div>
 
@@ -277,7 +277,7 @@
     <div class="card step" id="step3">
       <div class="head"><span class="snum" id="snum3">3</span><h2>Connect ChatGPT</h2></div>
       <div class="body">
-        <p class="desc">Add NotesBridge as a custom connector in ChatGPT (one time).</p>
+        <p class="desc">Add RemindersBridge as a custom connector in ChatGPT (one time).</p>
         <ol class="howto">
           <li>In ChatGPT, open <b>Settings &#8594; Plugins</b> (formerly <b>Connectors</b>).</li>
           <li>Under <b>Security &amp; login</b>, enable <b>Developer mode</b>.</li>
@@ -285,7 +285,7 @@
           <li>Paste this <b>MCP Server URL</b>:</li>
         </ol>
         <div class="cmd">
-          <div class="code" id="mcpUrl">https://notesbridge.vercel.app/mcp</div>
+          <div class="code" id="mcpUrl">https://remindersbridge.vercel.app/mcp</div>
           <button class="copy" data-target="mcpUrl" onclick="copyEl(this)" aria-label="Copy MCP server URL">Copy</button>
         </div>
         <ol class="howto" start="5" style="counter-reset:h 4">
@@ -300,14 +300,14 @@
     <div class="card step" id="step4">
       <div class="head"><span class="snum" id="snum4">4</span><h2>Try it in ChatGPT</h2></div>
       <div class="body">
-        <p class="desc">Start a new chat, enable the NotesBridge connector, and ask:</p>
+        <p class="desc">Start a new chat, enable the RemindersBridge connector, and ask:</p>
         <div class="prompt">
-          <div class="code">Search my Apple Notes for <em>quarterly goals</em></div>
-          <button class="copy" data-copy="Search my Apple Notes for quarterly goals" onclick="copyText(this)" aria-label="Copy example prompt">Copy</button>
+          <div class="code">What reminders do I have due <em>today</em>?</div>
+          <button class="copy" data-copy="What reminders do I have due today?" onclick="copyText(this)" aria-label="Copy example prompt">Copy</button>
         </div>
         <div class="prompt">
-          <div class="code">Create a note titled <em>Meeting notes</em> with today's action items</div>
-          <button class="copy" data-copy="Create a note titled Meeting notes with today's action items" onclick="copyText(this)" aria-label="Copy example prompt">Copy</button>
+          <div class="code">Add a reminder to <em>call the dentist</em> tomorrow at 3pm</div>
+          <button class="copy" data-copy="Add a reminder to call the dentist tomorrow at 3pm" onclick="copyText(this)" aria-label="Copy example prompt">Copy</button>
         </div>
         <p class="note" style="margin-top:12px">Your Mac must be awake with the agent running for requests to work. Write actions are always confirmed inside ChatGPT before they run.</p>
       </div>
@@ -329,7 +329,7 @@
   </section>
 
   <footer class="sitefoot">
-    <a href="/privacy">Privacy</a>·<a href="/support">Support</a>·<a href="https://github.com/IsaiahDupree/notesbridge" rel="noopener">GitHub</a>
+    <a href="/privacy">Privacy</a>·<a href="/support">Support</a>·<a href="https://github.com/IsaiahDupree/reminders-bridge" rel="noopener">GitHub</a>
   </footer>
 
 </div>
@@ -413,7 +413,7 @@
       pairCodeVal = j.code;
       $('pairCode').textContent = j.code;
       $('pairBox').classList.remove('hidden');
-      $('cmdPair').innerHTML = 'npx apple-notes-agent pair <span class="accent">' + esc(j.code) + '</span>';
+      $('cmdPair').innerHTML = 'npx apple-reminders-agent pair <span class="accent">' + esc(j.code) + '</span>';
       btn.textContent = 'Generate a new code';
       done[1] = true;
       render();
