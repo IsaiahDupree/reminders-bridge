@@ -39,7 +39,8 @@ import puppeteer from 'puppeteer-core';
 
 const KIT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SHOTS = path.join(KIT_DIR, 'screenshots');
-const CONFIG = JSON.parse(fs.readFileSync(path.join(KIT_DIR, 'submission.config.json'), 'utf8'));
+const CONFIG_FILE = process.env.CONFIG_FILE || 'submission.config.json';
+const CONFIG = JSON.parse(fs.readFileSync(path.join(KIT_DIR, CONFIG_FILE), 'utf8'));
 const ENV_FILE = path.join(KIT_DIR, '..', '.env.local');
 const LAUNCHER = '/Users/isaiahdupree/Documents/Chrome/chrome-bridge/chrome-launcher.sh';
 const CDP = 'http://127.0.0.1:9222';

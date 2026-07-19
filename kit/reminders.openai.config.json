@@ -15,7 +15,7 @@
     "supportUrl": "https://remindersbridge.vercel.app/support",
     "privacyUrl": "https://remindersbridge.vercel.app/privacy",
     "termsUrl": "https://remindersbridge.vercel.app/terms",
-    "demoRecordingUrl": "PENDING — record a demo of RemindersBridge in ChatGPT (demo account) and upload Unlisted to YouTube, then paste the URL here.",
+    "demoRecordingUrl": "https://youtu.be/-BOVfI2287s",
     "demoRecordingNote": "REQUIRED by OpenAI. A recorded demo hosted on YouTube (Unlisted is fine).",
     "directoryIcon": "../assets/icon-512.png",
     "composerIcon": "../assets/icon-512.png",
